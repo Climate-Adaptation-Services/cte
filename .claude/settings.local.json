@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/sophi/Documents/Afgesloten projecten/DashTMT/**)"
+    ]
+  }
+}
