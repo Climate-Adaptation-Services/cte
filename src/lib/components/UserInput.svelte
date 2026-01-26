@@ -86,99 +86,139 @@
 </script>
 
 <div class="user-input-container">
-	<div class="input-row">
-		<div class="input-group">
-			<label for="variable">Number of days per year with:</label>
-			<div class="custom-select" class:open={variableDropdownOpen}>
-				<button
-					type="button"
-					class="select-trigger"
-					onclick={() => variableDropdownOpen = !variableDropdownOpen}
-					aria-haspopup="listbox"
-					aria-expanded={variableDropdownOpen}
-				>
-					<span>{appState.temperature.variable}</span>
-					<svg class="select-arrow" class:rotated={variableDropdownOpen} width="10" height="6" viewBox="0 0 12 8" fill="none">
-						<path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</button>
-				{#if variableDropdownOpen}
-					<div class="select-dropdown">
-						{#each variableOptions as option}
-							<button
-								type="button"
-								class="select-option"
-								class:selected={appState.temperature.variable === option.value}
-								onclick={() => selectVariable(option.value)}
-							>
-								{option.label}
-							</button>
-						{/each}
+	<!-- Header Section -->
+	<div class="section-header">
+		<h2 class="main-question">What would you like to know?</h2>
+		<p class="subtitle">Configure your climate query below</p>
+	</div>
+
+	<!-- Sections 1 & 2: Side by side -->
+	<div class="sections-row">
+		<!-- Section 1: Temperature Condition (Primary) -->
+		<div class="input-section primary">
+			<div class="section-header-inline">
+				<div class="section-number">1</div>
+				<div class="section-content">
+					<label class="section-label">Temperature condition</label>
+					<p class="section-description">Define the temperature threshold you want to analyze</p>
+				</div>
+			</div>
+
+			<div class="input-row">
+				<div class="input-group">
+					<label for="variable">Number of days per year with:</label>
+					<div class="custom-select" class:open={variableDropdownOpen}>
+						<button
+							type="button"
+							class="select-trigger"
+							onclick={() => variableDropdownOpen = !variableDropdownOpen}
+							aria-haspopup="listbox"
+							aria-expanded={variableDropdownOpen}
+						>
+							<span>{appState.temperature.variable}</span>
+							<svg class="select-arrow" class:rotated={variableDropdownOpen} width="10" height="6" viewBox="0 0 12 8" fill="none">
+								<path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</button>
+						{#if variableDropdownOpen}
+							<div class="select-dropdown">
+								{#each variableOptions as option}
+									<button
+										type="button"
+										class="select-option"
+										class:selected={appState.temperature.variable === option.value}
+										onclick={() => selectVariable(option.value)}
+									>
+										{option.label}
+									</button>
+								{/each}
+							</div>
+						{/if}
 					</div>
-				{/if}
+				</div>
+
+				<div class="input-group">
+					<label for="threshold">Threshold (°C)</label>
+					<input
+						id="threshold"
+						type="number"
+						bind:value={appState.temperature.threshold}
+						min="-50"
+						max="60"
+						step="1"
+					/>
+				</div>
+
+				<div class="input-group" class:hidden={!showThreshold2}>
+					<label for="threshold2">Degrees °C</label>
+					<input
+						id="threshold2"
+						type="number"
+						bind:value={appState.temperature.threshold2}
+						min="-50"
+						max="60"
+						step="1"
+						disabled={!showThreshold2}
+					/>
+				</div>
 			</div>
 		</div>
 
-		<div class="input-group">
-			<label for="threshold">Degrees °C</label>
-			<input
-				id="threshold"
-				type="number"
-				bind:value={appState.temperature.threshold}
-				min="-50"
-				max="60"
-				step="1"
-			/>
-		</div>
+		<!-- Section 2: Time Period (Secondary) -->
+		<div class="input-section secondary">
+			<div class="section-header-inline">
+				<div class="section-number">2</div>
+				<div class="section-content">
+					<label class="section-label">Future time period</label>
+					<p class="section-description">Select which future period to analyze</p>
+				</div>
+			</div>
 
-		<div class="input-group" class:hidden={!showThreshold2}>
-			<label for="threshold2">Degrees °C</label>
-			<input
-				id="threshold2"
-				type="number"
-				bind:value={appState.temperature.threshold2}
-				min="-50"
-				max="60"
-				step="1"
-				disabled={!showThreshold2}
-			/>
-		</div>
-
-		<div class="input-group compact">
-			<label for="years">Future time period</label>
-			<div class="custom-select" class:open={yearsDropdownOpen}>
-				<button
-					type="button"
-					class="select-trigger"
-					onclick={() => yearsDropdownOpen = !yearsDropdownOpen}
-					aria-haspopup="listbox"
-					aria-expanded={yearsDropdownOpen}
-				>
-					<span>{appState.temperature.years}</span>
-					<svg class="select-arrow" class:rotated={yearsDropdownOpen} width="10" height="6" viewBox="0 0 12 8" fill="none">
-						<path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</button>
-				{#if yearsDropdownOpen}
-					<div class="select-dropdown">
-						{#each yearsOptions as option}
-							<button
-								type="button"
-								class="select-option"
-								class:selected={appState.temperature.years === option.value}
-								onclick={() => selectYears(option.value)}
-							>
-								{option.label}
-							</button>
-						{/each}
+			<div class="input-row">
+				<div class="input-group compact">
+					<div class="custom-select" class:open={yearsDropdownOpen}>
+						<button
+							type="button"
+							class="select-trigger"
+							onclick={() => yearsDropdownOpen = !yearsDropdownOpen}
+							aria-haspopup="listbox"
+							aria-expanded={yearsDropdownOpen}
+						>
+							<span>{appState.temperature.years}</span>
+							<svg class="select-arrow" class:rotated={yearsDropdownOpen} width="10" height="6" viewBox="0 0 12 8" fill="none">
+								<path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</button>
+						{#if yearsDropdownOpen}
+							<div class="select-dropdown">
+								{#each yearsOptions as option}
+									<button
+										type="button"
+										class="select-option"
+										class:selected={appState.temperature.years === option.value}
+										onclick={() => selectYears(option.value)}
+									>
+										{option.label}
+									</button>
+								{/each}
+							</div>
+						{/if}
 					</div>
-				{/if}
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="slider-section">
-		<p class="slider-label">Select months:</p>
+	<!-- Section 3: Months (Tertiary) -->
+	<div class="input-section tertiary">
+		<div class="section-header-inline">
+			<div class="section-number">3</div>
+			<div class="section-content">
+				<label class="section-label">Select months</label>
+				<p class="section-description">Choose which months to include in the analysis</p>
+			</div>
+		</div>
+
 		<div class="month-slider">
 			<div class="slider-track"></div>
 			<div class="slider-ticks">
@@ -217,32 +257,150 @@
 		margin-bottom: 2rem;
 		padding: 1.5rem;
 		background: white;
-		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		border-radius: 10px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 		border: 1px solid #e9ecef;
+	}
+
+	/* Header Section */
+	.section-header {
+		margin-bottom: 1.25rem;
+		text-align: center;
+		padding-bottom: 1rem;
+		border-bottom: 2px solid #f0f4f8;
+	}
+
+	.main-question {
+		font-size: 1.375rem;
+		font-weight: 700;
+		color: #1a2332;
+		margin: 0 0 0.25rem 0;
+		line-height: 1.3;
+	}
+
+	.subtitle {
+		font-size: 0.8125rem;
+		color: #6c757d;
+		font-weight: 400;
+		margin: 0;
+	}
+
+	/* Sections Row - for side by side layout */
+	.sections-row {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.sections-row .input-section {
+		flex: 1;
+		min-width: 300px;
+		margin-bottom: 0;
+	}
+
+	/* Input Sections with Visual Hierarchy */
+	.input-section {
+		margin-bottom: 1rem;
+		border-radius: 8px;
+		transition: all 0.3s ease;
+		position: relative;
+	}
+
+	.input-section:focus-within {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.input-section.primary {
+		border: 2px solid #4A6FA5;
+		background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+		padding: 1.25rem;
+		box-shadow: 0 2px 8px rgba(74, 111, 165, 0.12);
+	}
+
+	.input-section.secondary {
+		border: 2px solid #D6DEE8;
+		background: white;
+		padding: 1.125rem;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+	}
+
+	.input-section.tertiary {
+		border: 1px solid #D6DEE8;
+		background: white;
+		padding: 1.125rem;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+	}
+
+	/* Section Header Inline */
+	.section-header-inline {
+		display: flex;
+		gap: 0.75rem;
+		margin-bottom: 0.875rem;
+		align-items: flex-start;
+	}
+
+	.section-number {
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, #4A6FA5 0%, #3F5E8C 100%);
+		color: white;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 1rem;
+		flex-shrink: 0;
+		box-shadow: 0 2px 6px rgba(74, 111, 165, 0.3);
+	}
+
+	.section-content {
+		flex: 1;
+	}
+
+	.section-label {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: #2c3e50;
+		margin: 0 0 0.125rem 0;
+		display: block;
+	}
+
+	.section-description {
+		font-size: 0.75rem;
+		color: #6c757d;
+		margin: 0;
+		font-weight: 400;
 	}
 
 	.input-row {
 		display: flex;
-		gap: 1.25rem;
+		gap: 1rem;
 		align-items: flex-end;
 		flex-wrap: wrap;
+		margin-top: 0.5rem;
 	}
 
 	.input-group {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.375rem;
 		flex: 0 0 auto;
 		transition: opacity 0.3s, visibility 0.3s;
 	}
 
 	.input-group:first-child {
-		max-width: 320px;
+		flex: 1;
+		min-width: 260px;
+		max-width: 100%;
 	}
 
 	.input-group.compact {
-		max-width: 180px;
+		flex: 1;
+		min-width: 180px;
+		max-width: 100%;
 	}
 
 	.input-group.hidden {
@@ -250,18 +408,17 @@
 	}
 
 	label {
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		color: #495057;
-		font-weight: 500;
+		font-weight: 600;
 		margin: 0;
 		letter-spacing: 0.01em;
-		min-height: 2.5rem;
 		display: flex;
 		align-items: flex-end;
 	}
 
 	input[type='number'] {
-		padding: 0.5rem 0.625rem;
+		padding: 0.375rem 0.5rem;
 		border: 1px solid #D6DEE8;
 		border-radius: 6px;
 		font-size: 0.875rem;
@@ -271,9 +428,9 @@
 		transition: all 0.2s ease;
 		font-weight: 500;
 		color: #2c3e50;
-		max-width: 100px;
+		max-width: 90px;
 		font-family: inherit;
-		height: 2.375rem;
+		height: 2.125rem;
 	}
 
 	input[type='number']:hover {
@@ -305,8 +462,8 @@
 
 	.select-trigger {
 		width: 100%;
-		padding: 0.5rem 0.625rem;
-		padding-right: 2.25rem;
+		padding: 0.375rem 0.5rem;
+		padding-right: 2rem;
 		border: 1px solid #D6DEE8;
 		border-radius: 6px;
 		font-size: 0.875rem;
@@ -321,7 +478,7 @@
 		align-items: center;
 		justify-content: space-between;
 		font-family: inherit;
-		height: 2.375rem;
+		height: 2.125rem;
 	}
 
 	.select-trigger:hover {
@@ -376,7 +533,7 @@
 
 	.select-option {
 		width: 100%;
-		padding: 0.45rem 0.625rem;
+		padding: 0.375rem 0.5rem;
 		border: none;
 		background: white;
 		cursor: pointer;
@@ -404,28 +561,23 @@
 	}
 
 	.slider-section {
-		margin-top: 1.5rem;
+		margin-top: 0;
 		padding-top: 0;
 	}
 
 	.slider-label {
-		display: block;
-		margin-bottom: 0.5rem;
-		font-size: 0.875rem;
-		color: #495057;
-		font-weight: 600;
-		letter-spacing: 0.02em;
+		display: none;
 	}
 
 	.month-slider {
 		position: relative;
-		height: 35px;
+		height: 30px;
 		margin: 0.25rem 0;
 	}
 
 	.slider-track {
 		position: absolute;
-		top: 25px;
+		top: 20px;
 		transform: translateY(-50%);
 		width: 100%;
 		height: 4px;
@@ -444,7 +596,7 @@
 
 	.tick {
 		position: absolute;
-		top: 25px;
+		top: 20px;
 		transform: translate(-50%, -50%);
 		width: 8px;
 		height: 8px;
@@ -462,7 +614,7 @@
 
 	.slider-range {
 		position: absolute;
-		top: 25px;
+		top: 20px;
 		transform: translateY(-50%);
 		height: 4px;
 		background: #4A6FA5;
@@ -473,7 +625,7 @@
 
 	.slider-input {
 		position: absolute;
-		top: 25px;
+		top: 20px;
 		transform: translateY(-50%);
 		width: calc(100% + 20px);
 		margin-left: -10px;
@@ -574,9 +726,9 @@
 
 	.month-labels {
 		position: relative;
-		margin-top: 0.5rem;
-		font-size: 0.75rem;
-		height: 1.2rem;
+		margin-top: 0.375rem;
+		font-size: 0.6875rem;
+		height: 1rem;
 	}
 
 	.month-label {
@@ -592,6 +744,6 @@
 	.month-label.selected {
 		color: #3F5E8C;
 		font-weight: 700;
-		font-size: 0.85rem;
+		font-size: 0.75rem;
 	}
 </style>
