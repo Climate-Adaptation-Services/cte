@@ -3,7 +3,9 @@
     "allow": [
       "Read(//c/Users/sophi/Documents/Afgesloten projecten/DashTMT/**)",
       "Bash(npm run build:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
