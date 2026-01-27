@@ -88,8 +88,8 @@
 <div class="user-input-container">
 	<!-- Header Section -->
 	<div class="section-header">
-		<h2 class="main-question">What would you like to know?</h2>
-		<p class="subtitle">Configure your climate query below</p>
+		<h2 class="main-question">How often do temperature thresholds occur?</h2>
+		<p class="subtitle">Configure your climate query to analyze temperature patterns</p>
 	</div>
 
 	<!-- Sections 1 & 2: Side by side -->
@@ -297,6 +297,7 @@
 		flex: 1;
 		min-width: 300px;
 		margin-bottom: 0;
+		z-index: 10;
 	}
 
 	/* Input Sections with Visual Hierarchy */
@@ -331,6 +332,7 @@
 		background: white;
 		padding: 1.125rem;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+		z-index: 1;
 	}
 
 	/* Section Header Inline */

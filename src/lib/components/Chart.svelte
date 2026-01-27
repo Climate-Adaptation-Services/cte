@@ -7,10 +7,32 @@
 
 	let svgContainer: HTMLDivElement;
 	let svg: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
+	let tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
 
-	const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+	const margin = { top: 70, right: 30, bottom: 50, left: 65 };
 	let width = 0;
 	let height = 400;
+
+	// Climate-themed color palette (cool to warm = past to future warming)
+	const colors = {
+		era5: '#64748b',      // Slate gray for historical baseline
+		upcoming: '#f59e0b',  // Amber for near future (slight warming)
+		mid: '#ea580c',       // Orange for mid-century (moderate warming)
+		end: '#b91c1c'        // Deep red for end-century (significant warming)
+	};
+
+	const legendLabels = {
+		era5: 'Historical (ERA5)',
+		upcoming: '2011-2040',
+		mid: '2041-2070',
+		end: '2071-2100'
+	};
+
+	// Month names for title
+	const monthNames = [
+		'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+	];
 
 	onMount(() => {
 		// Create SVG
@@ -25,6 +47,13 @@
 			.attr('height', 400)
 			.append('g')
 			.attr('transform', `translate(${margin.left},${margin.top})`);
+
+		// Create tooltip
+		tooltip = d3
+			.select(svgContainer)
+			.append('div')
+			.attr('class', 'chart-tooltip')
+			.style('opacity', 0);
 
 		// Initial render
 		renderChart();
@@ -47,14 +76,86 @@
 	function renderPlaceholder() {
 		if (!svg) return;
 
+		// Add placeholder title
 		svg
 			.append('text')
 			.attr('x', width / 2)
-			.attr('y', height / 2)
+			.attr('y', -45)
 			.attr('text-anchor', 'middle')
-			.style('font-size', '16px')
-			.style('fill', '#666')
-			.text('Click on the left map to select a location');
+			.style('font-size', '18px')
+			.style('font-weight', '600')
+			.style('fill', '#111827')
+			.text('Temperature Seasonality');
+
+		svg
+			.append('text')
+			.attr('x', width / 2)
+			.attr('y', -22)
+			.attr('text-anchor', 'middle')
+			.style('font-size', '13px')
+			.style('font-weight', '400')
+			.style('fill', '#6b7280')
+			.text('Select a location on the map to view data');
+
+		// Professional chart icon using accent colors
+		const iconGroup = svg
+			.append('g')
+			.attr('transform', `translate(${width / 2}, ${height / 2 - 15})`);
+
+		// Icon background circle
+		iconGroup
+			.append('circle')
+			.attr('cx', 0)
+			.attr('cy', 0)
+			.attr('r', 45)
+			.attr('fill', '#f8fafc')
+			.attr('stroke', '#e2e8f0')
+			.attr('stroke-width', 2);
+
+		// Mini chart lines (simplified line chart icon)
+		const iconColors = [colors.era5, colors.upcoming, colors.mid, colors.end];
+		const lineData = [
+			[{ x: -25, y: 8 }, { x: -10, y: 5 }, { x: 5, y: 12 }, { x: 20, y: 2 }],
+			[{ x: -25, y: 12 }, { x: -10, y: 8 }, { x: 5, y: 15 }, { x: 20, y: 6 }],
+			[{ x: -25, y: 16 }, { x: -10, y: 12 }, { x: 5, y: 18 }, { x: 20, y: 10 }],
+			[{ x: -25, y: 20 }, { x: -10, y: 16 }, { x: 5, y: 22 }, { x: 20, y: 14 }]
+		];
+
+		const iconLine = d3.line<{ x: number; y: number }>()
+			.x(d => d.x)
+			.y(d => d.y)
+			.curve(d3.curveMonotoneX);
+
+		lineData.forEach((data, i) => {
+			iconGroup
+				.append('path')
+				.datum(data)
+				.attr('fill', 'none')
+				.attr('stroke', iconColors[i])
+				.attr('stroke-width', 2.5)
+				.attr('stroke-linecap', 'round')
+				.attr('d', iconLine)
+				.attr('opacity', 0.85);
+		});
+
+		// Small dots at the end of each line
+		lineData.forEach((data, i) => {
+			iconGroup
+				.append('circle')
+				.attr('cx', data[3].x)
+				.attr('cy', data[3].y)
+				.attr('r', 3)
+				.attr('fill', iconColors[i]);
+		});
+
+		svg
+			.append('text')
+			.attr('x', width / 2)
+			.attr('y', height / 2 + 50)
+			.attr('text-anchor', 'middle')
+			.style('font-size', '14px')
+			.style('fill', '#6b7280')
+			.text('Click on the map to select a location');
 	}
 
 	function renderTemperatureChart() {
@@ -82,126 +183,379 @@
 			.range([0, width])
 			.padding(0.5);
 
+		const yMin = d3.min(sampleData, d => Math.min(d.era5, d.upcoming, d.mid, d.end))! - 2;
+		const yMax = d3.max(sampleData, d => Math.max(d.era5, d.upcoming, d.mid, d.end))! + 2;
+
 		const yScale = d3
 			.scaleLinear()
-			.domain([
-				d3.min(sampleData, d => Math.min(d.era5, d.upcoming, d.mid, d.end))! - 2,
-				d3.max(sampleData, d => Math.max(d.era5, d.upcoming, d.mid, d.end))! + 2
-			])
+			.domain([yMin, yMax])
 			.range([height, 0]);
 
-		// Add axes
+		// Add horizontal grid lines
 		svg!
 			.append('g')
+			.attr('class', 'grid')
+			.selectAll('line')
+			.data(yScale.ticks(6))
+			.enter()
+			.append('line')
+			.attr('x1', 0)
+			.attr('x2', width)
+			.attr('y1', d => yScale(d))
+			.attr('y2', d => yScale(d))
+			.attr('stroke', '#e5e7eb')
+			.attr('stroke-dasharray', '3,3');
+
+		// Add X axis
+		const xAxis = svg!
+			.append('g')
+			.attr('class', 'x-axis')
 			.attr('transform', `translate(0,${height})`)
 			.call(
 				d3
 					.axisBottom(xScale)
 					.tickFormat((d) => sampleData.find(sd => sd.month === d)?.monthName || '')
+					.tickSize(0)
 			);
 
-		svg!
-			.append('g')
-			.call(d3.axisLeft(yScale));
+		xAxis.select('.domain').attr('stroke', '#d1d5db');
+		xAxis.selectAll('text')
+			.attr('dy', '1em')
+			.style('font-size', '13px')
+			.style('fill', '#6b7280');
 
-		// Add Y axis label
+		// Add Y axis
+		const yAxis = svg!
+			.append('g')
+			.attr('class', 'y-axis')
+			.call(
+				d3.axisLeft(yScale)
+					.ticks(6)
+					.tickSize(-5)
+			);
+
+		yAxis.select('.domain').attr('stroke', '#d1d5db');
+		yAxis.selectAll('text')
+			.style('font-size', '13px')
+			.style('fill', '#6b7280');
+		yAxis.selectAll('line').attr('stroke', '#d1d5db');
+
+		// Add Y axis label based on selected variable
+		let yAxisLabel = 'Temperature (°C)';
+		if (appState.temperature.variable === 'Maximum temperature above') {
+			yAxisLabel = 'Max Temperature (°C)';
+		} else if (appState.temperature.variable === 'Minimum temperature below') {
+			yAxisLabel = 'Min Temperature (°C)';
+		}
+
 		svg!
 			.append('text')
 			.attr('transform', 'rotate(-90)')
-			.attr('y', 0 - margin.left)
+			.attr('y', 0 - margin.left + 15)
 			.attr('x', 0 - height / 2)
-			.attr('dy', '1em')
 			.style('text-anchor', 'middle')
-			.text('Temperature (°C)');
+			.style('font-size', '13px')
+			.style('fill', '#374151')
+			.style('font-weight', '500')
+			.text(yAxisLabel);
 
-		// Line generators
+		// Line generators with smooth curves
 		const lineGenerators = {
 			era5: d3
 				.line<any>()
 				.x(d => xScale(d.month)!)
-				.y(d => yScale(d.era5)),
+				.y(d => yScale(d.era5))
+				.curve(d3.curveMonotoneX),
 			upcoming: d3
 				.line<any>()
 				.x(d => xScale(d.month)!)
-				.y(d => yScale(d.upcoming)),
+				.y(d => yScale(d.upcoming))
+				.curve(d3.curveMonotoneX),
 			mid: d3
 				.line<any>()
 				.x(d => xScale(d.month)!)
-				.y(d => yScale(d.mid)),
+				.y(d => yScale(d.mid))
+				.curve(d3.curveMonotoneX),
 			end: d3
 				.line<any>()
 				.x(d => xScale(d.month)!)
 				.y(d => yScale(d.end))
+				.curve(d3.curveMonotoneX)
 		};
 
-		// Line colors
-		const colors = {
-			era5: 'maroon',
-			upcoming: 'red',
-			mid: 'orange',
-			end: 'yellow'
-		};
+		// Draw lines with animation
+		const lineKeys = ['era5', 'upcoming', 'mid', 'end'] as const;
 
-		// Draw lines
-		Object.entries(lineGenerators).forEach(([key, lineGen]) => {
-			svg!
+		lineKeys.forEach((key) => {
+			const lineGen = lineGenerators[key];
+			const path = svg!
 				.append('path')
 				.datum(sampleData)
 				.attr('fill', 'none')
-				.attr('stroke', colors[key as keyof typeof colors])
-				.attr('stroke-width', 2)
+				.attr('stroke', colors[key])
+				.attr('stroke-width', 2.5)
+				.attr('stroke-linecap', 'round')
+				.attr('stroke-linejoin', 'round')
 				.attr('d', lineGen);
+
+			// Animate line drawing
+			const totalLength = path.node()?.getTotalLength() || 0;
+			path
+				.attr('stroke-dasharray', `${totalLength} ${totalLength}`)
+				.attr('stroke-dashoffset', totalLength)
+				.transition()
+				.duration(1000)
+				.ease(d3.easeQuadOut)
+				.attr('stroke-dashoffset', 0);
 		});
 
-		// Add legend
-		const legend = svg!
+		// Add static data points (small, no individual hover)
+		lineKeys.forEach((key) => {
+			const yKey = key as keyof typeof sampleData[0];
+
+			svg!
+				.selectAll(`.dot-${key}`)
+				.data(sampleData)
+				.enter()
+				.append('circle')
+				.attr('class', `dot-${key}`)
+				.attr('cx', d => xScale(d.month)!)
+				.attr('cy', d => yScale(d[yKey] as number))
+				.attr('r', 0)
+				.attr('fill', colors[key])
+				.attr('stroke', 'white')
+				.attr('stroke-width', 2)
+				.transition()
+				.delay(1000)
+				.duration(300)
+				.attr('r', 4);
+		});
+
+		// Vertical hover line
+		const hoverLine = svg!
+			.append('line')
+			.attr('class', 'hover-line')
+			.attr('y1', 0)
+			.attr('y2', height)
+			.attr('stroke', '#94a3b8')
+			.attr('stroke-width', 1)
+			.attr('stroke-dasharray', '4,4')
+			.style('opacity', 0);
+
+		// Hover dots (larger, shown on hover)
+		const hoverDots = svg!
 			.append('g')
-			.attr('transform', `translate(${width - 150}, 10)`);
+			.attr('class', 'hover-dots')
+			.style('opacity', 0);
 
-		const legendData = [
-			{ name: 'Historical (ERA5)', color: 'maroon' },
-			{ name: 'Upcoming period (2011-2040)', color: 'red' },
-			{ name: 'Mid century (2041-2070)', color: 'orange' },
-			{ name: 'End century (2071-2100)', color: 'yellow' }
-		];
-
-		legendData.forEach((item, i) => {
-			const legendRow = legend
-				.append('g')
-				.attr('transform', `translate(0, ${i * 20})`);
-
-			legendRow
-				.append('line')
-				.attr('x1', 0)
-				.attr('x2', 20)
-				.attr('y1', 10)
-				.attr('y2', 10)
-				.attr('stroke', item.color)
+		lineKeys.forEach((key) => {
+			hoverDots
+				.append('circle')
+				.attr('class', `hover-dot-${key}`)
+				.attr('r', 6)
+				.attr('fill', colors[key])
+				.attr('stroke', 'white')
 				.attr('stroke-width', 2);
-
-			legendRow
-				.append('text')
-				.attr('x', 25)
-				.attr('y', 10)
-				.attr('dy', '0.35em')
-				.style('font-size', '11px')
-				.text(item.name);
 		});
 
-		// Add title
+		// Invisible overlay for mouse tracking
+		svg!
+			.append('rect')
+			.attr('class', 'overlay')
+			.attr('width', width)
+			.attr('height', height)
+			.attr('fill', 'transparent')
+			.style('cursor', 'crosshair')
+			.on('mouseenter', () => {
+				hoverLine.style('opacity', 1);
+				hoverDots.style('opacity', 1);
+				if (tooltip) tooltip.style('opacity', 1);
+			})
+			.on('mouseleave', () => {
+				hoverLine.style('opacity', 0);
+				hoverDots.style('opacity', 0);
+				if (tooltip) tooltip.style('opacity', 0);
+			})
+			.on('mousemove', function(event) {
+				const [mouseX] = d3.pointer(event);
+
+				// Find closest month
+				const monthPositions = sampleData.map(d => ({
+					month: d.month,
+					x: xScale(d.month)!,
+					data: d
+				}));
+
+				const closest = monthPositions.reduce((prev, curr) =>
+					Math.abs(curr.x - mouseX) < Math.abs(prev.x - mouseX) ? curr : prev
+				);
+
+				// Update hover line position
+				hoverLine.attr('x1', closest.x).attr('x2', closest.x);
+
+				// Update hover dots positions
+				lineKeys.forEach((key) => {
+					const yKey = key as keyof typeof closest.data;
+					hoverDots
+						.select(`.hover-dot-${key}`)
+						.attr('cx', closest.x)
+						.attr('cy', yScale(closest.data[yKey] as number));
+				});
+
+				// Update tooltip
+				if (tooltip) {
+					const tooltipHtml = `
+						<div style="font-weight: 600; margin-bottom: 8px; font-size: 13px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px;">${closest.data.monthName}</div>
+						<div style="display: flex; flex-direction: column; gap: 4px;">
+							<div style="display: flex; align-items: center; gap: 8px;">
+								<span style="width: 10px; height: 10px; border-radius: 50%; background: ${colors.era5};"></span>
+								<span style="color: #6b7280; flex: 1;">${legendLabels.era5}</span>
+								<span style="font-weight: 600;">${closest.data.era5.toFixed(1)}°C</span>
+							</div>
+							<div style="display: flex; align-items: center; gap: 8px;">
+								<span style="width: 10px; height: 10px; border-radius: 50%; background: ${colors.upcoming};"></span>
+								<span style="color: #6b7280; flex: 1;">${legendLabels.upcoming}</span>
+								<span style="font-weight: 600;">${closest.data.upcoming.toFixed(1)}°C</span>
+							</div>
+							<div style="display: flex; align-items: center; gap: 8px;">
+								<span style="width: 10px; height: 10px; border-radius: 50%; background: ${colors.mid};"></span>
+								<span style="color: #6b7280; flex: 1;">${legendLabels.mid}</span>
+								<span style="font-weight: 600;">${closest.data.mid.toFixed(1)}°C</span>
+							</div>
+							<div style="display: flex; align-items: center; gap: 8px;">
+								<span style="width: 10px; height: 10px; border-radius: 50%; background: ${colors.end};"></span>
+								<span style="color: #6b7280; flex: 1;">${legendLabels.end}</span>
+								<span style="font-weight: 600;">${closest.data.end.toFixed(1)}°C</span>
+							</div>
+						</div>
+					`;
+
+					tooltip
+						.html(tooltipHtml)
+						.style('left', `${event.offsetX + 20}px`)
+						.style('top', `${event.offsetY - 60}px`);
+				}
+			});
+
+		// Generate dynamic title based on selected variable
+		let titleText = 'Monthly Temperature';
+		if (appState.temperature.variable === 'Maximum temperature above') {
+			titleText = 'Average Monthly Maximum Temperature';
+		} else if (appState.temperature.variable === 'Minimum temperature below') {
+			titleText = 'Average Monthly Minimum Temperature';
+		} else {
+			titleText = 'Average Monthly Temperature';
+		}
+
+		// Format location coordinates
+		const lat = appState.selectedLocation?.lat;
+		const lon = appState.selectedLocation?.lon;
+		const locationText = lat && lon
+			? `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`
+			: 'Selected Location';
+
+		// Add main title
 		svg!
 			.append('text')
 			.attr('x', width / 2)
-			.attr('y', -5)
+			.attr('y', -45)
 			.attr('text-anchor', 'middle')
-			.style('font-size', '14px')
-			.style('font-weight', 'bold')
-			.text('Seasonality of temperature for selected location');
+			.style('font-size', '17px')
+			.style('font-weight', '600')
+			.style('fill', '#111827')
+			.text(titleText);
+
+		// Add subtitle with location
+		svg!
+			.append('text')
+			.attr('x', width / 2)
+			.attr('y', -22)
+			.attr('text-anchor', 'middle')
+			.style('font-size', '13px')
+			.style('font-weight', '400')
+			.style('fill', '#6b7280')
+			.text(`Location: ${locationText}`);
+
+		// Add vertical legend at top right
+		const legendData = [
+			{ key: 'era5', label: legendLabels.era5 },
+			{ key: 'upcoming', label: legendLabels.upcoming },
+			{ key: 'mid', label: legendLabels.mid },
+			{ key: 'end', label: legendLabels.end }
+		];
+
+		const legend = svg!
+			.append('g')
+			.attr('class', 'legend')
+			.attr('transform', `translate(${width - 120}, 5)`);
+
+		// Legend background (semi-transparent)
+		legend
+			.append('rect')
+			.attr('x', -10)
+			.attr('y', -10)
+			.attr('width', 130)
+			.attr('height', legendData.length * 24 + 12)
+			.attr('rx', 6)
+			.attr('fill', 'rgba(255, 255, 255, 0.92)')
+			.attr('stroke', '#e5e7eb')
+			.attr('stroke-width', 1);
+
+		legendData.forEach((item, i) => {
+			const legendItem = legend
+				.append('g')
+				.attr('transform', `translate(0, ${i * 24})`)
+				.style('cursor', 'pointer');
+
+			legendItem
+				.append('line')
+				.attr('x1', 0)
+				.attr('x2', 20)
+				.attr('y1', 6)
+				.attr('y2', 6)
+				.attr('stroke', colors[item.key as keyof typeof colors])
+				.attr('stroke-width', 2.5)
+				.attr('stroke-linecap', 'round');
+
+			legendItem
+				.append('circle')
+				.attr('cx', 10)
+				.attr('cy', 6)
+				.attr('r', 3.5)
+				.attr('fill', colors[item.key as keyof typeof colors])
+				.attr('stroke', 'white')
+				.attr('stroke-width', 1.5);
+
+			legendItem
+				.append('text')
+				.attr('x', 28)
+				.attr('y', 6)
+				.attr('dy', '0.35em')
+				.style('font-size', '11px')
+				.style('fill', '#4b5563')
+				.style('font-weight', '500')
+				.text(item.label);
+		});
 	}
 
-	// Re-render when selectedLocation changes
+	// Re-render when selectedLocation or temperature parameters change
 	$effect(() => {
-		if (appState.selectedLocation !== undefined) {
+		// Watch all relevant state changes
+		// For selectedLocation, we need to watch the actual lat/lon values, not just the object
+		const locationLat = appState.selectedLocation?.lat;
+		const locationLon = appState.selectedLocation?.lon;
+		const variable = appState.temperature.variable;
+		const threshold = appState.temperature.threshold;
+		const threshold2 = appState.temperature.threshold2;
+		// For arrays, watch the individual elements
+		const monthStart = appState.temperature.months[0];
+		const monthEnd = appState.temperature.months[1];
+		const years = appState.temperature.years;
+
+		console.log('Chart $effect triggered', { locationLat, locationLon, variable, threshold, threshold2, monthStart, monthEnd, years });
+
+		// Re-render chart whenever any of these change
+		if (svg) {
 			renderChart();
 		}
 	});
@@ -212,11 +566,31 @@
 <style>
 	.chart-container {
 		width: 100%;
-		height: 50vh;
 		min-height: 400px;
+		background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+		padding: 24px;
+		border-radius: 12px;
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+		border: 1px solid #e5e7eb;
+		position: relative;
+	}
+
+	.chart-container :global(.chart-tooltip) {
+		position: absolute;
 		background: white;
-		padding: 20px;
-		border-radius: 4px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		padding: 12px 16px;
+		border-radius: 10px;
+		box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+		border: 1px solid #e5e7eb;
+		font-size: 12px;
+		pointer-events: none;
+		z-index: 100;
+		transition: opacity 0.1s ease;
+		min-width: 180px;
+	}
+
+	.chart-container :global(.x-axis text),
+	.chart-container :global(.y-axis text) {
+		font-family: system-ui, -apple-system, sans-serif;
 	}
 </style>
