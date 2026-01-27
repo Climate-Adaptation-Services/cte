@@ -12,16 +12,73 @@
 	let margin = { top: 70, right: 30, bottom: 50, left: 65 };
 	let width = 0;
 	let height = 400;
+	let svgWidth = 0; // Store full SVG width for centering titles
 
 	// Responsive margin calculation
 	function getResponsiveMargin() {
 		const containerWidth = svgContainer?.clientWidth || 600;
 		if (containerWidth < 480) {
-			return { top: 50, right: 15, bottom: 40, left: 45 };
+			// Extra bottom margin for horizontal legend below chart
+			return { top: 50, right: 15, bottom: 55, left: 45 };
 		} else if (containerWidth < 768) {
-			return { top: 60, right: 20, bottom: 45, left: 55 };
+			// Extra bottom margin for horizontal legend below chart
+			return { top: 60, right: 20, bottom: 60, left: 55 };
 		}
 		return { top: 70, right: 30, bottom: 50, left: 65 };
+	}
+
+	// Responsive font sizes and positions
+	function getResponsiveSizes() {
+		const containerWidth = svgContainer?.clientWidth || 600;
+		if (containerWidth < 480) {
+			return {
+				titleY: -35,
+				subtitleY: -18,
+				titleFontSize: '14px',
+				subtitleFontSize: '11px',
+				iconRadius: 35,
+				axisFontSize: '9px',
+				yAxisLabelSize: '10px',
+				showAllMonths: false,
+				legendBelow: true
+			};
+		} else if (containerWidth < 768) {
+			return {
+				titleY: -40,
+				subtitleY: -20,
+				titleFontSize: '15px',
+				subtitleFontSize: '12px',
+				iconRadius: 40,
+				axisFontSize: '11px',
+				yAxisLabelSize: '11px',
+				showAllMonths: true,
+				legendBelow: true
+			};
+		}
+		return {
+			titleY: -45,
+			subtitleY: -22,
+			titleFontSize: '17px',
+			subtitleFontSize: '13px',
+			iconRadius: 45,
+			axisFontSize: '13px',
+			yAxisLabelSize: '13px',
+			showAllMonths: true,
+			legendBelow: false
+		};
+	}
+
+	// Calculate center x position for titles (centered in the white container/SVG)
+	function getTitleCenterX() {
+		// On mobile, center over the full SVG width (not just plot area)
+		// Since the g element is translated by margin.left, we need to offset
+		const containerWidth = svgContainer?.clientWidth || 600;
+		if (containerWidth < 768) {
+			// Center over full container: (svgWidth / 2) - margin.left
+			return (svgWidth / 2) - margin.left;
+		}
+		// Desktop: center over the plot area
+		return width / 2;
 	}
 
 	// Climate-themed color palette (cool to warm = past to future warming)
@@ -48,15 +105,19 @@
 	onMount(() => {
 		// Create SVG with responsive margins
 		margin = getResponsiveMargin();
-		const containerWidth = svgContainer.clientWidth;
-		const containerHeight = containerWidth < 480 ? 320 : containerWidth < 768 ? 360 : 400;
-		width = containerWidth - margin.left - margin.right;
+		// Get container padding to calculate available SVG width
+		const containerStyles = getComputedStyle(svgContainer);
+		const paddingLeft = parseFloat(containerStyles.paddingLeft) || 0;
+		const paddingRight = parseFloat(containerStyles.paddingRight) || 0;
+		svgWidth = svgContainer.clientWidth - paddingLeft - paddingRight;
+		const containerHeight = svgWidth < 480 ? 320 : svgWidth < 768 ? 360 : 400;
+		width = svgWidth - margin.left - margin.right;
 		height = containerHeight - margin.top - margin.bottom;
 
 		svg = d3
 			.select(svgContainer)
 			.append('svg')
-			.attr('width', containerWidth)
+			.attr('width', svgWidth)
 			.attr('height', containerHeight)
 			.append('g')
 			.attr('transform', `translate(${margin.left},${margin.top})`);
@@ -89,23 +150,26 @@
 	function renderPlaceholder() {
 		if (!svg) return;
 
+		const sizes = getResponsiveSizes();
+		const centerX = getTitleCenterX();
+
 		// Add placeholder title
 		svg
 			.append('text')
-			.attr('x', width / 2)
-			.attr('y', -45)
+			.attr('x', centerX)
+			.attr('y', sizes.titleY)
 			.attr('text-anchor', 'middle')
-			.style('font-size', '18px')
+			.style('font-size', sizes.titleFontSize)
 			.style('font-weight', '600')
 			.style('fill', '#111827')
 			.text('Temperature Seasonality');
 
 		svg
 			.append('text')
-			.attr('x', width / 2)
-			.attr('y', -22)
+			.attr('x', centerX)
+			.attr('y', sizes.subtitleY)
 			.attr('text-anchor', 'middle')
-			.style('font-size', '13px')
+			.style('font-size', sizes.subtitleFontSize)
 			.style('font-weight', '400')
 			.style('fill', '#6b7280')
 			.text('Select a location on the map to view data');
@@ -113,14 +177,14 @@
 		// Professional chart icon using accent colors
 		const iconGroup = svg
 			.append('g')
-			.attr('transform', `translate(${width / 2}, ${height / 2 - 15})`);
+			.attr('transform', `translate(${centerX}, ${height / 2 - 15})`);
 
 		// Icon background circle
 		iconGroup
 			.append('circle')
 			.attr('cx', 0)
 			.attr('cy', 0)
-			.attr('r', 45)
+			.attr('r', sizes.iconRadius)
 			.attr('fill', '#f8fafc')
 			.attr('stroke', '#e2e8f0')
 			.attr('stroke-width', 2);
@@ -163,7 +227,7 @@
 
 		svg
 			.append('text')
-			.attr('x', width / 2)
+			.attr('x', centerX)
 			.attr('y', height / 2 + 50)
 			.attr('text-anchor', 'middle')
 			.style('font-size', '14px')
@@ -219,6 +283,9 @@
 			.attr('stroke', '#e5e7eb')
 			.attr('stroke-dasharray', '3,3');
 
+		// Get responsive sizes for axis
+		const sizes = getResponsiveSizes();
+
 		// Add X axis
 		const xAxis = svg!
 			.append('g')
@@ -227,14 +294,18 @@
 			.call(
 				d3
 					.axisBottom(xScale)
-					.tickFormat((d) => sampleData.find(sd => sd.month === d)?.monthName || '')
+					.tickFormat((d, i) => {
+						// On small screens, show only odd months (Jan, Mar, May, etc.)
+						if (!sizes.showAllMonths && i % 2 === 1) return '';
+						return sampleData.find(sd => sd.month === d)?.monthName || '';
+					})
 					.tickSize(0)
 			);
 
 		xAxis.select('.domain').attr('stroke', '#d1d5db');
 		xAxis.selectAll('text')
 			.attr('dy', '1em')
-			.style('font-size', '13px')
+			.style('font-size', sizes.axisFontSize)
 			.style('fill', '#6b7280');
 
 		// Add Y axis
@@ -249,16 +320,16 @@
 
 		yAxis.select('.domain').attr('stroke', '#d1d5db');
 		yAxis.selectAll('text')
-			.style('font-size', '13px')
+			.style('font-size', sizes.axisFontSize)
 			.style('fill', '#6b7280');
 		yAxis.selectAll('line').attr('stroke', '#d1d5db');
 
 		// Add Y axis label based on selected variable
 		let yAxisLabel = 'Temperature (°C)';
 		if (appState.temperature.variable === 'Maximum temperature above') {
-			yAxisLabel = 'Max Temperature (°C)';
+			yAxisLabel = 'Max Temp (°C)';
 		} else if (appState.temperature.variable === 'Minimum temperature below') {
-			yAxisLabel = 'Min Temperature (°C)';
+			yAxisLabel = 'Min Temp (°C)';
 		}
 
 		svg!
@@ -267,7 +338,7 @@
 			.attr('y', 0 - margin.left + 15)
 			.attr('x', 0 - height / 2)
 			.style('text-anchor', 'middle')
-			.style('font-size', '13px')
+			.style('font-size', sizes.yAxisLabelSize)
 			.style('fill', '#374151')
 			.style('font-weight', '500')
 			.text(yAxisLabel);
@@ -467,13 +538,16 @@
 			? `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`
 			: 'Selected Location';
 
+		// Use sizes from earlier (already declared for axis)
+		const centerX = getTitleCenterX();
+
 		// Add main title
 		svg!
 			.append('text')
-			.attr('x', width / 2)
-			.attr('y', -45)
+			.attr('x', centerX)
+			.attr('y', sizes.titleY)
 			.attr('text-anchor', 'middle')
-			.style('font-size', '17px')
+			.style('font-size', sizes.titleFontSize)
 			.style('font-weight', '600')
 			.style('fill', '#111827')
 			.text(titleText);
@@ -481,15 +555,15 @@
 		// Add subtitle with location
 		svg!
 			.append('text')
-			.attr('x', width / 2)
-			.attr('y', -22)
+			.attr('x', centerX)
+			.attr('y', sizes.subtitleY)
 			.attr('text-anchor', 'middle')
-			.style('font-size', '13px')
+			.style('font-size', sizes.subtitleFontSize)
 			.style('font-weight', '400')
 			.style('fill', '#6b7280')
 			.text(`Location: ${locationText}`);
 
-		// Add vertical legend at top right
+		// Add legend (position depends on screen size)
 		const legendData = [
 			{ key: 'era5', label: legendLabels.era5 },
 			{ key: 'upcoming', label: legendLabels.upcoming },
@@ -497,58 +571,95 @@
 			{ key: 'end', label: legendLabels.end }
 		];
 
-		const legend = svg!
-			.append('g')
-			.attr('class', 'legend')
-			.attr('transform', `translate(${width - 120}, 5)`);
-
-		// Legend background (semi-transparent)
-		legend
-			.append('rect')
-			.attr('x', -10)
-			.attr('y', -10)
-			.attr('width', 130)
-			.attr('height', legendData.length * 24 + 12)
-			.attr('rx', 6)
-			.attr('fill', 'rgba(255, 255, 255, 0.92)')
-			.attr('stroke', '#e5e7eb')
-			.attr('stroke-width', 1);
-
-		legendData.forEach((item, i) => {
-			const legendItem = legend
+		if (sizes.legendBelow) {
+			// Horizontal legend below chart for mobile
+			const legend = svg!
 				.append('g')
-				.attr('transform', `translate(0, ${i * 24})`)
-				.style('cursor', 'pointer');
+				.attr('class', 'legend')
+				.attr('transform', `translate(${centerX}, ${height + 35})`);
 
-			legendItem
-				.append('line')
-				.attr('x1', 0)
-				.attr('x2', 20)
-				.attr('y1', 6)
-				.attr('y2', 6)
-				.attr('stroke', colors[item.key as keyof typeof colors])
-				.attr('stroke-width', 2.5)
-				.attr('stroke-linecap', 'round');
+			const itemWidth = Math.min(80, width / 4);
+			const totalWidth = itemWidth * 4;
+			const startX = -totalWidth / 2;
 
-			legendItem
-				.append('circle')
-				.attr('cx', 10)
-				.attr('cy', 6)
-				.attr('r', 3.5)
-				.attr('fill', colors[item.key as keyof typeof colors])
-				.attr('stroke', 'white')
-				.attr('stroke-width', 1.5);
+			legendData.forEach((item, i) => {
+				const legendItem = legend
+					.append('g')
+					.attr('transform', `translate(${startX + i * itemWidth}, 0)`)
+					.style('cursor', 'pointer');
 
-			legendItem
-				.append('text')
-				.attr('x', 28)
-				.attr('y', 6)
-				.attr('dy', '0.35em')
-				.style('font-size', '11px')
-				.style('fill', '#4b5563')
-				.style('font-weight', '500')
-				.text(item.label);
-		});
+				legendItem
+					.append('circle')
+					.attr('cx', 6)
+					.attr('cy', 0)
+					.attr('r', 4)
+					.attr('fill', colors[item.key as keyof typeof colors]);
+
+				legendItem
+					.append('text')
+					.attr('x', 14)
+					.attr('y', 0)
+					.attr('dy', '0.35em')
+					.style('font-size', '9px')
+					.style('fill', '#4b5563')
+					.style('font-weight', '500')
+					.text(item.label.replace('Historical (ERA5)', 'Historic'));
+			});
+		} else {
+			// Vertical legend at top right for desktop
+			const legend = svg!
+				.append('g')
+				.attr('class', 'legend')
+				.attr('transform', `translate(${width - 120}, 5)`);
+
+			// Legend background (semi-transparent)
+			legend
+				.append('rect')
+				.attr('x', -10)
+				.attr('y', -10)
+				.attr('width', 130)
+				.attr('height', legendData.length * 24 + 12)
+				.attr('rx', 6)
+				.attr('fill', 'rgba(255, 255, 255, 0.92)')
+				.attr('stroke', '#e5e7eb')
+				.attr('stroke-width', 1);
+
+			legendData.forEach((item, i) => {
+				const legendItem = legend
+					.append('g')
+					.attr('transform', `translate(0, ${i * 24})`)
+					.style('cursor', 'pointer');
+
+				legendItem
+					.append('line')
+					.attr('x1', 0)
+					.attr('x2', 20)
+					.attr('y1', 6)
+					.attr('y2', 6)
+					.attr('stroke', colors[item.key as keyof typeof colors])
+					.attr('stroke-width', 2.5)
+					.attr('stroke-linecap', 'round');
+
+				legendItem
+					.append('circle')
+					.attr('cx', 10)
+					.attr('cy', 6)
+					.attr('r', 3.5)
+					.attr('fill', colors[item.key as keyof typeof colors])
+					.attr('stroke', 'white')
+					.attr('stroke-width', 1.5);
+
+				legendItem
+					.append('text')
+					.attr('x', 28)
+					.attr('y', 6)
+					.attr('dy', '0.35em')
+					.style('font-size', '11px')
+					.style('fill', '#4b5563')
+					.style('font-weight', '500')
+					.text(item.label);
+			});
+		}
 	}
 
 	// Re-render when selectedLocation or temperature parameters change
@@ -586,6 +697,8 @@
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 		border: 1px solid #e5e7eb;
 		position: relative;
+		box-sizing: border-box;
+		overflow: hidden;
 	}
 
 	.chart-container :global(.chart-tooltip) {
