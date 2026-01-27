@@ -87,7 +87,7 @@
 			// Load kenia.geojson grid
 			const gridFile = 'kenia.geojson';
 
-			const response = await fetch(`/src/lib/data/grids/${gridFile}`);
+			const response = await fetch(`/data/grids/${gridFile}`);
 			const geojsonData = await response.json();
 
 			// Create choropleth layer
