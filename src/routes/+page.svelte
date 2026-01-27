@@ -1,10 +1,41 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import UserInput from '$lib/components/UserInput.svelte';
 	import Map from '$lib/components/Map.svelte';
 	import Chart from '$lib/components/Chart.svelte';
-	import { getAppState } from '$lib/stores/appState.svelte';
+	import { getAppState, updateTemperature, getStateFromURL, updateURLFromState } from '$lib/stores/appState.svelte';
 
 	const appState = getAppState();
+
+	// Load state from URL on mount
+	onMount(() => {
+		const urlState = getStateFromURL();
+		if (urlState) {
+			updateTemperature(urlState);
+		}
+	});
+
+	// Update URL when state changes
+	$effect(() => {
+		// Track all temperature state values
+		const _ = [
+			appState.temperature.variable,
+			appState.temperature.threshold,
+			appState.temperature.threshold2,
+			appState.temperature.years,
+			appState.temperature.months
+		];
+		updateURLFromState();
+	});
+
+	// Share functionality
+	let showCopied = $state(false);
+
+	async function copyShareLink() {
+		await navigator.clipboard.writeText(window.location.href);
+		showCopied = true;
+		setTimeout(() => showCopied = false, 2000);
+	}
 
 	// Month names for subtitle
 	const monthNames = [
@@ -38,6 +69,21 @@
 		<div class="maps-header">
 			<h2 class="maps-main-title">Climate Comparison</h2>
 			<p class="maps-subtitle">{querySubtitle()}</p>
+			<button class="share-btn" onclick={copyShareLink}>
+				{#if showCopied}
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<polyline points="20 6 9 17 4 12"/>
+					</svg>
+					Link copied!
+				{:else}
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+						<polyline points="16 6 12 2 8 6"/>
+						<line x1="12" y1="2" x2="12" y2="15"/>
+					</svg>
+					Share this view
+				{/if}
+			</button>
 		</div>
 
 		<div class="maps-container">
@@ -60,7 +106,7 @@
 		margin: 0;
 		padding: 0;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-		background: #f8f9fa;
+		background: #F4FBF4;
 	}
 
 	.container {
@@ -98,6 +144,30 @@
 		margin: 0;
 	}
 
+	.share-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		margin-top: 0.75rem;
+		padding: 0.375rem 0.75rem;
+		background: #0A565E;
+		border: none;
+		border-radius: 6px;
+		color: white;
+		font-size: 0.75rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.share-btn:hover {
+		background: #084850;
+	}
+
+	.share-btn svg {
+		flex-shrink: 0;
+	}
+
 	.maps-container {
 		display: flex;
 		gap: 20px;
@@ -133,14 +203,67 @@
 
 	/* Responsive design */
 	@media (max-width: 768px) {
+		.container {
+			margin-left: 12px;
+			margin-right: 12px;
+			padding: 12px 0;
+		}
+
+		.maps-section {
+			margin: 1rem 0;
+		}
+
+		.maps-header {
+			padding: 1rem;
+			margin-bottom: 1rem;
+		}
+
+		.maps-main-title {
+			font-size: 1.125rem;
+		}
+
+		.maps-subtitle {
+			font-size: 0.75rem;
+			line-height: 1.4;
+		}
+
 		.maps-container {
 			flex-direction: column;
+			gap: 12px;
 		}
 
 		.map-left,
 		.map-right {
 			width: 100% !important;
-			padding-right: 0;
+			padding: 0.75rem;
+		}
+
+		.map-title {
+			font-size: 0.875rem;
+			margin-bottom: 0.5rem;
+			padding-bottom: 0.375rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.container {
+			margin-left: 8px;
+			margin-right: 8px;
+			padding: 8px 0;
+		}
+
+		.maps-header {
+			padding: 0.75rem;
+			border-radius: 8px;
+		}
+
+		.maps-main-title {
+			font-size: 1rem;
+		}
+
+		.map-wrapper {
+			border-radius: 6px;
+			padding: 0.5rem;
 		}
 	}
 </style>

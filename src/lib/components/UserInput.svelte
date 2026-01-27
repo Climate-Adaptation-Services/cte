@@ -1,7 +1,21 @@
 <script lang="ts">
-	import { getAppState, updateTemperature } from '$lib/stores/appState.svelte';
+	import { getAppState, updateTemperature, resetToDefaults } from '$lib/stores/appState.svelte';
 
 	const appState = getAppState();
+
+	// Tooltip state
+	let activeTooltip = $state<string | null>(null);
+
+	// Tooltip content
+	const tooltips = {
+		temperature: 'Choose which temperature metric to analyze: maximum daily temperature (heat stress), minimum daily temperature (cold/frost), or average temperature range.',
+		period: 'Climate projections are grouped into 30-year periods. Earlier periods have less uncertainty, later periods show more pronounced climate change effects.',
+		months: 'Select a range of months to focus your analysis on specific seasons or time periods within the year.'
+	};
+
+	function toggleTooltip(id: string) {
+		activeTooltip = activeTooltip === id ? null : id;
+	}
 
 	// Month names for the range slider
 	const monthNames = [
@@ -11,7 +25,7 @@
 
 	// Abbreviated month names for display
 	const monthAbbreviations = [
-		'Jan', 'Feb', 'MarI', 'Apr', 'May', 'Jun',
+		'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 	];
 
@@ -90,6 +104,13 @@
 	<div class="section-header">
 		<h2 class="main-question">How often do temperature thresholds occur?</h2>
 		<p class="subtitle">Configure your climate query to analyze temperature patterns</p>
+		<button class="reset-btn" onclick={() => resetToDefaults()}>
+			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+				<path d="M3 3v5h5"/>
+			</svg>
+			Reset to defaults
+		</button>
 	</div>
 
 	<!-- Sections 1 & 2: Side by side -->
@@ -99,7 +120,13 @@
 			<div class="section-header-inline">
 				<div class="section-number">1</div>
 				<div class="section-content">
-					<label class="section-label">Temperature condition</label>
+					<div class="label-with-tooltip">
+						<span class="section-label">Temperature condition</span>
+						<button class="info-link" onclick={() => toggleTooltip('temperature')}>ⓘ</button>
+						{#if activeTooltip === 'temperature'}
+							<div class="tooltip">{tooltips.temperature}</div>
+						{/if}
+					</div>
 					<p class="section-description">Define the temperature threshold you want to analyze</p>
 				</div>
 			</div>
@@ -169,7 +196,13 @@
 			<div class="section-header-inline">
 				<div class="section-number">2</div>
 				<div class="section-content">
-					<label class="section-label">Future time period</label>
+					<div class="label-with-tooltip">
+						<span class="section-label">Future time period</span>
+						<button class="info-link" onclick={() => toggleTooltip('period')}>ⓘ</button>
+						{#if activeTooltip === 'period'}
+							<div class="tooltip">{tooltips.period}</div>
+						{/if}
+					</div>
 					<p class="section-description">Select which future period to analyze</p>
 				</div>
 			</div>
@@ -214,7 +247,13 @@
 		<div class="section-header-inline">
 			<div class="section-number">3</div>
 			<div class="section-content">
-				<label class="section-label">Select months</label>
+				<div class="label-with-tooltip">
+					<span class="section-label">Select months</span>
+					<button class="info-link" onclick={() => toggleTooltip('months')}>ⓘ</button>
+					{#if activeTooltip === 'months'}
+						<div class="tooltip">{tooltips.months}</div>
+					{/if}
+				</div>
 				<p class="section-description">Choose which months to include in the analysis</p>
 			</div>
 		</div>
@@ -314,10 +353,10 @@
 	}
 
 	.input-section.primary {
-		border: 2px solid #4A6FA5;
+		border: 2px solid #0A565E;
 		background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
 		padding: 1.25rem;
-		box-shadow: 0 2px 8px rgba(74, 111, 165, 0.12);
+		box-shadow: 0 2px 8px rgba(10, 86, 94, 0.12);
 	}
 
 	.input-section.secondary {
@@ -347,7 +386,7 @@
 		width: 32px;
 		height: 32px;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #4A6FA5 0%, #3F5E8C 100%);
+		background: linear-gradient(135deg, #0A565E 0%, #084850 100%);
 		color: white;
 		display: flex;
 		align-items: center;
@@ -355,7 +394,7 @@
 		font-weight: 700;
 		font-size: 1rem;
 		flex-shrink: 0;
-		box-shadow: 0 2px 6px rgba(74, 111, 165, 0.3);
+		box-shadow: 0 2px 6px rgba(10, 86, 94, 0.3);
 	}
 
 	.section-content {
@@ -451,9 +490,9 @@
 
 	input[type='number']:focus {
 		outline: none;
-		border-color: #4A6FA5;
+		border-color: #0A565E;
 		background: white;
-		box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+		box-shadow: 0 0 0 3px rgba(10, 86, 94, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
 	}
 
 	/* Custom Select Styles */
@@ -490,14 +529,14 @@
 	}
 
 	.custom-select.open .select-trigger {
-		border-color: #4A6FA5;
-		box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+		border-color: #0A565E;
+		box-shadow: 0 0 0 3px rgba(10, 86, 94, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
 	}
 
 	.select-arrow {
 		position: absolute;
 		right: 0.625rem;
-		color: #3F5E8C;
+		color: #084850;
 		transition: transform 0.2s ease;
 		pointer-events: none;
 		width: 10px;
@@ -548,18 +587,18 @@
 	}
 
 	.select-option:hover {
-		background: #F0F4F8;
-		color: #3F5E8C;
+		background: rgba(192, 255, 192, 0.5);
+		color: #084850;
 	}
 
 	.select-option.selected {
-		background: #E8EEF5;
-		color: #3F5E8C;
+		background: rgba(192, 255, 192, 0.6);
+		color: #084850;
 		font-weight: 600;
 	}
 
 	.select-option.selected:hover {
-		background: #DDE6F3;
+		background: rgba(192, 255, 192, 0.8);
 	}
 
 	.slider-section {
@@ -609,8 +648,8 @@
 	}
 
 	.tick.active {
-		background: #4A6FA5;
-		border-color: #3F5E8C;
+		background: #0A565E;
+		border-color: #084850;
 		transform: translate(-50%, -50%) scale(1.2);
 	}
 
@@ -619,7 +658,7 @@
 		top: 20px;
 		transform: translateY(-50%);
 		height: 4px;
-		background: #4A6FA5;
+		background: #0A565E;
 		border-radius: 2px;
 		pointer-events: none;
 		z-index: 2;
@@ -650,7 +689,7 @@
 		background: white;
 		cursor: grab;
 		pointer-events: auto;
-		border: 3px solid #3F5E8C;
+		border: 3px solid #084850;
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 		margin-top: -9px;
 		transition: all 0.15s ease;
@@ -664,7 +703,7 @@
 
 	.slider-input::-webkit-slider-thumb:active {
 		cursor: grabbing;
-		border-color: #3F5E8C;
+		border-color: #084850;
 		transform: scale(1.05);
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 	}
@@ -676,7 +715,7 @@
 		background: white;
 		cursor: grab;
 		pointer-events: auto;
-		border: 3px solid #3F5E8C;
+		border: 3px solid #084850;
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 		transition: all 0.15s ease;
 	}
@@ -689,7 +728,7 @@
 
 	.slider-input::-moz-range-thumb:active {
 		cursor: grabbing;
-		border-color: #3F5E8C;
+		border-color: #084850;
 		transform: scale(1.05);
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 	}
@@ -717,12 +756,12 @@
 	}
 
 	.slider-input:focus::-webkit-slider-thumb {
-		box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 0 0 3px rgba(10, 86, 94, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15);
 		outline: none;
 	}
 
 	.slider-input:focus::-moz-range-thumb {
-		box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 0 0 3px rgba(10, 86, 94, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15);
 		outline: none;
 	}
 
@@ -744,8 +783,262 @@
 	}
 
 	.month-label.selected {
-		color: #3F5E8C;
+		color: #084850;
 		font-weight: 700;
 		font-size: 0.75rem;
+	}
+
+	/* Reset Button */
+	.reset-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		margin-top: 0.75rem;
+		padding: 0.375rem 0.75rem;
+		background: transparent;
+		border: 1px solid #D6DEE8;
+		border-radius: 6px;
+		color: #6c757d;
+		font-size: 0.75rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.reset-btn:hover {
+		background: #f8f9fa;
+		border-color: #0A565E;
+		color: #0A565E;
+	}
+
+	.reset-btn svg {
+		flex-shrink: 0;
+	}
+
+	/* Label with Tooltip */
+	.label-with-tooltip {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		position: relative;
+	}
+
+	.info-link {
+		padding: 0;
+		background: transparent;
+		border: none;
+		color: #9AA6B2;
+		cursor: pointer;
+		transition: color 0.2s ease;
+		font-size: 0.875rem;
+		line-height: 1;
+	}
+
+	.info-link:hover {
+		color: #0A565E;
+	}
+
+	.tooltip {
+		position: absolute;
+		top: calc(100% + 8px);
+		left: 0;
+		z-index: 1000;
+		width: 280px;
+		padding: 0.75rem;
+		background: #1a2332;
+		color: white;
+		font-size: 0.75rem;
+		font-weight: 400;
+		line-height: 1.5;
+		border-radius: 8px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		animation: tooltipFade 0.2s ease;
+	}
+
+	.tooltip::before {
+		content: '';
+		position: absolute;
+		top: -6px;
+		left: 16px;
+		width: 12px;
+		height: 12px;
+		background: #1a2332;
+		transform: rotate(45deg);
+	}
+
+	@keyframes tooltipFade {
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	/* Mobile Responsive Styles */
+	@media (max-width: 768px) {
+		.user-input-container {
+			padding: 1rem;
+			margin-bottom: 1rem;
+		}
+
+		.section-header {
+			margin-bottom: 1rem;
+			padding-bottom: 0.75rem;
+		}
+
+		.main-question {
+			font-size: 1.125rem;
+		}
+
+		.subtitle {
+			font-size: 0.75rem;
+		}
+
+		.sections-row {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+
+		.sections-row .input-section {
+			min-width: 100%;
+		}
+
+		.input-section.primary,
+		.input-section.secondary,
+		.input-section.tertiary {
+			padding: 1rem;
+		}
+
+		.section-header-inline {
+			gap: 0.5rem;
+			margin-bottom: 0.75rem;
+		}
+
+		.section-number {
+			width: 28px;
+			height: 28px;
+			font-size: 0.875rem;
+		}
+
+		.section-label {
+			font-size: 0.875rem;
+		}
+
+		.section-description {
+			font-size: 0.6875rem;
+		}
+
+		.input-row {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+
+		.input-group:first-child {
+			min-width: 100%;
+		}
+
+		.input-group.compact {
+			min-width: 100%;
+		}
+
+		input[type='number'] {
+			max-width: 100%;
+			width: 100%;
+		}
+
+		/* Tooltip adjustments for mobile */
+		.tooltip {
+			width: calc(100vw - 80px);
+			max-width: 280px;
+			left: -10px;
+			font-size: 0.6875rem;
+		}
+
+		/* Month slider adjustments */
+		.month-labels {
+			font-size: 0.5625rem;
+		}
+
+		.month-label.selected {
+			font-size: 0.625rem;
+		}
+
+		.slider-input::-webkit-slider-thumb {
+			width: 20px;
+			height: 20px;
+			margin-top: -8px;
+		}
+
+		.slider-input::-moz-range-thumb {
+			width: 20px;
+			height: 20px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.user-input-container {
+			padding: 0.75rem;
+			border-radius: 8px;
+		}
+
+		.main-question {
+			font-size: 1rem;
+		}
+
+		.input-section.primary,
+		.input-section.secondary,
+		.input-section.tertiary {
+			padding: 0.75rem;
+			border-radius: 6px;
+		}
+
+		.section-number {
+			width: 24px;
+			height: 24px;
+			font-size: 0.75rem;
+		}
+
+		.section-label {
+			font-size: 0.8125rem;
+		}
+
+		label {
+			font-size: 0.6875rem;
+		}
+
+		.select-trigger,
+		input[type='number'] {
+			font-size: 0.8125rem;
+			height: 2rem;
+			padding: 0.25rem 0.375rem;
+		}
+
+		.select-option {
+			font-size: 0.8125rem;
+			padding: 0.25rem 0.375rem;
+		}
+
+		.reset-btn {
+			font-size: 0.6875rem;
+			padding: 0.25rem 0.5rem;
+		}
+
+		/* Hide some month labels on very small screens */
+		.month-label:nth-child(2),
+		.month-label:nth-child(4),
+		.month-label:nth-child(6),
+		.month-label:nth-child(8),
+		.month-label:nth-child(10),
+		.month-label:nth-child(12) {
+			display: none;
+		}
+
+		.tick {
+			width: 6px;
+			height: 6px;
+		}
 	}
 </style>

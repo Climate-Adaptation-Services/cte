@@ -18,6 +18,7 @@
 	let geoJsonLayer: L.GeoJSON | null = null;
 	let isInitialized = false;
 	let isProgrammaticUpdate = false;
+	let isLoading = $state(true);
 
 	// Load Leaflet dynamically (client-side only)
 	onMount(() => {
@@ -34,7 +35,8 @@
 			// Initialize map
 			map = L.map(mapContainer, {
 				zoomControl: true,
-				attributionControl: true
+				attributionControl: true,
+				scrollWheelZoom: false
 			}).setView(
 				[appState.mapView.center[0], appState.mapView.center[1]],
 				appState.mapView.zoom
@@ -118,8 +120,10 @@
 				}
 			}).addTo(map!);
 
+			isLoading = false;
 		} catch (error) {
 			console.error('Error loading GeoJSON:', error);
+			isLoading = false;
 		}
 	}
 
@@ -180,6 +184,12 @@
 </script>
 
 <div class="map-container">
+	{#if isLoading}
+		<div class="loading-overlay">
+			<div class="spinner"></div>
+			<p>Loading map data...</p>
+		</div>
+	{/if}
 	<div id={mapId} bind:this={mapContainer} class="map"></div>
 	{#if showLegend}
 		<div class="legend">
@@ -238,5 +248,112 @@
 		height: 15px;
 		margin-right: 8px;
 		border: 1px solid #ccc;
+	}
+
+	/* Loading Overlay */
+	.loading-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(255, 255, 255, 0.9);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		border-radius: 6px;
+	}
+
+	.loading-overlay p {
+		margin-top: 1rem;
+		color: #0A565E;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.spinner {
+		width: 40px;
+		height: 40px;
+		border: 3px solid #e9ecef;
+		border-top-color: #0A565E;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* Mobile Responsive Styles */
+	@media (max-width: 768px) {
+		.map-container {
+			height: 50vh;
+			min-height: 300px;
+		}
+
+		.legend {
+			bottom: 10px;
+			right: 10px;
+			padding: 8px;
+		}
+
+		.legend-title {
+			font-size: 12px;
+			margin-bottom: 6px;
+		}
+
+		.legend-item {
+			font-size: 11px;
+			margin: 3px 0;
+		}
+
+		.legend-color {
+			width: 16px;
+			height: 12px;
+			margin-right: 6px;
+		}
+
+		.loading-overlay p {
+			font-size: 0.8125rem;
+		}
+
+		.spinner {
+			width: 32px;
+			height: 32px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.map-container {
+			height: 45vh;
+			min-height: 250px;
+		}
+
+		.legend {
+			bottom: 8px;
+			right: 8px;
+			padding: 6px;
+			border-radius: 3px;
+		}
+
+		.legend-title {
+			font-size: 11px;
+			margin-bottom: 4px;
+		}
+
+		.legend-item {
+			font-size: 10px;
+			margin: 2px 0;
+		}
+
+		.legend-color {
+			width: 14px;
+			height: 10px;
+			margin-right: 4px;
+		}
 	}
 </style>

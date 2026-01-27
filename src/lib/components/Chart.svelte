@@ -9,9 +9,20 @@
 	let svg: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
 	let tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
 
-	const margin = { top: 70, right: 30, bottom: 50, left: 65 };
+	let margin = { top: 70, right: 30, bottom: 50, left: 65 };
 	let width = 0;
 	let height = 400;
+
+	// Responsive margin calculation
+	function getResponsiveMargin() {
+		const containerWidth = svgContainer?.clientWidth || 600;
+		if (containerWidth < 480) {
+			return { top: 50, right: 15, bottom: 40, left: 45 };
+		} else if (containerWidth < 768) {
+			return { top: 60, right: 20, bottom: 45, left: 55 };
+		}
+		return { top: 70, right: 30, bottom: 50, left: 65 };
+	}
 
 	// Climate-themed color palette (cool to warm = past to future warming)
 	const colors = {
@@ -35,16 +46,18 @@
 	];
 
 	onMount(() => {
-		// Create SVG
+		// Create SVG with responsive margins
+		margin = getResponsiveMargin();
 		const containerWidth = svgContainer.clientWidth;
+		const containerHeight = containerWidth < 480 ? 320 : containerWidth < 768 ? 360 : 400;
 		width = containerWidth - margin.left - margin.right;
-		height = 400 - margin.top - margin.bottom;
+		height = containerHeight - margin.top - margin.bottom;
 
 		svg = d3
 			.select(svgContainer)
 			.append('svg')
 			.attr('width', containerWidth)
-			.attr('height', 400)
+			.attr('height', containerHeight)
 			.append('g')
 			.attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -592,5 +605,34 @@
 	.chart-container :global(.x-axis text),
 	.chart-container :global(.y-axis text) {
 		font-family: system-ui, -apple-system, sans-serif;
+	}
+
+	/* Mobile Responsive Styles */
+	@media (max-width: 768px) {
+		.chart-container {
+			padding: 16px;
+			min-height: 350px;
+			border-radius: 10px;
+		}
+
+		.chart-container :global(.chart-tooltip) {
+			padding: 10px 12px;
+			min-width: 160px;
+			font-size: 11px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.chart-container {
+			padding: 12px;
+			min-height: 300px;
+			border-radius: 8px;
+		}
+
+		.chart-container :global(.chart-tooltip) {
+			padding: 8px 10px;
+			min-width: 140px;
+			font-size: 10px;
+		}
 	}
 </style>

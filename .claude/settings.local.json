@@ -5,7 +5,9 @@
       "Bash(npm run build:*)",
       "Bash(dir:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm run check:*)",
+      "WebFetch(domain:climateadaptationservices.com)"
     ]
   }
 }
