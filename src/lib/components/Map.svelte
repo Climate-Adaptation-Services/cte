@@ -19,6 +19,8 @@
 	let isInitialized = false;
 	let isProgrammaticUpdate = false;
 	let isLoading = $state(true);
+	let showTouchHint = $state(false);
+	let touchHintTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Load Leaflet dynamically (client-side only)
 	onMount(() => {
@@ -32,11 +34,16 @@
 			link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 			document.head.appendChild(link);
 
+			// Check if mobile device
+			const isMobile = window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window;
+
 			// Initialize map
 			map = L.map(mapContainer, {
 				zoomControl: true,
 				attributionControl: true,
-				scrollWheelZoom: false
+				scrollWheelZoom: false,
+				dragging: !isMobile, // Disable dragging on mobile (requires 2 fingers)
+				tap: false // Disable tap handler on mobile
 			}).setView(
 				[appState.mapView.center[0], appState.mapView.center[1]],
 				appState.mapView.zoom
@@ -71,6 +78,35 @@
 					});
 				}
 			});
+
+			// Add touch hint for mobile users
+			if (isMobile) {
+				mapContainer.addEventListener('touchstart', (e) => {
+					if (e.touches.length === 1) {
+						// Single finger touch - show hint
+						showTouchHint = true;
+						if (touchHintTimeout) clearTimeout(touchHintTimeout);
+						touchHintTimeout = setTimeout(() => {
+							showTouchHint = false;
+						}, 2000);
+					}
+				});
+
+				mapContainer.addEventListener('touchmove', (e) => {
+					if (e.touches.length >= 2) {
+						// Two finger gesture - enable dragging temporarily and hide hint
+						showTouchHint = false;
+						map!.dragging.enable();
+					}
+				});
+
+				mapContainer.addEventListener('touchend', () => {
+					// Re-disable dragging after gesture ends
+					if (isMobile) {
+						map!.dragging.disable();
+					}
+				});
+			}
 
 			// Load GeoJSON data
 			await loadGeoJSONData(L);
@@ -190,6 +226,11 @@
 			<p>Loading map data...</p>
 		</div>
 	{/if}
+	{#if showTouchHint}
+		<div class="touch-hint">
+			<span>Use two fingers to move the map</span>
+		</div>
+	{/if}
 	<div id={mapId} bind:this={mapContainer} class="map"></div>
 	{#if showLegend}
 		<div class="legend">
@@ -248,6 +289,32 @@
 		height: 15px;
 		margin-right: 8px;
 		border: 1px solid #ccc;
+	}
+
+	/* Touch hint overlay */
+	.touch-hint {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 999;
+		pointer-events: none;
+		border-radius: 6px;
+	}
+
+	.touch-hint span {
+		background: white;
+		padding: 12px 20px;
+		border-radius: 8px;
+		font-size: 14px;
+		font-weight: 500;
+		color: #333;
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 	}
 
 	/* Loading Overlay */

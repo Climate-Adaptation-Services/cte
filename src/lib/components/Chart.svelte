@@ -572,35 +572,39 @@
 		];
 
 		if (sizes.legendBelow) {
-			// Horizontal legend below chart for mobile
+			// 2x2 grid legend below chart for mobile
 			const legend = svg!
 				.append('g')
 				.attr('class', 'legend')
-				.attr('transform', `translate(${centerX}, ${height + 35})`);
+				.attr('transform', `translate(${centerX}, ${height + 30})`);
 
-			const itemWidth = Math.min(80, width / 4);
-			const totalWidth = itemWidth * 4;
-			const startX = -totalWidth / 2;
+			const colWidth = Math.min(90, width / 2.2);
+			const rowHeight = 16;
 
 			legendData.forEach((item, i) => {
+				const col = i % 2; // 0 or 1
+				const row = Math.floor(i / 2); // 0 or 1
+				const x = (col - 0.5) * colWidth; // Center the 2 columns
+				const y = row * rowHeight;
+
 				const legendItem = legend
 					.append('g')
-					.attr('transform', `translate(${startX + i * itemWidth}, 0)`)
+					.attr('transform', `translate(${x}, ${y})`)
 					.style('cursor', 'pointer');
 
 				legendItem
 					.append('circle')
-					.attr('cx', 6)
+					.attr('cx', 0)
 					.attr('cy', 0)
 					.attr('r', 4)
 					.attr('fill', colors[item.key as keyof typeof colors]);
 
 				legendItem
 					.append('text')
-					.attr('x', 14)
+					.attr('x', 8)
 					.attr('y', 0)
 					.attr('dy', '0.35em')
-					.style('font-size', '9px')
+					.style('font-size', '10px')
 					.style('fill', '#4b5563')
 					.style('font-weight', '500')
 					.text(item.label.replace('Historical (ERA5)', 'Historic'));
