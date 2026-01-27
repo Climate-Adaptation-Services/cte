@@ -11,7 +11,7 @@
 
 	// Abbreviated month names for display
 	const monthAbbreviations = [
-		'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+		'Jan', 'Feb', 'MarI', 'Apr', 'May', 'Jun',
 		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 	];
 
