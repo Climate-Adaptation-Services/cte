@@ -1,17 +1,16 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from "@sveltejs/adapter-static";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		// Using static adapter for client-side only deployment
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: undefined,
-			precompress: false,
-			strict: true
-		})
-	}
+  kit: {
+    adapter: adapter({
+      pages: "build",
+      assets: "build",
+      fallback: "index.html", // SPA fallback
+      precompress: false,
+      strict: false, // allow non-prerenderable routes
+    }),
+  },
 };
 
 export default config;

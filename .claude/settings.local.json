@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/sophi/Documents/Afgesloten projecten/DashTMT/**)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(dir:*)"
     ]
   }
 }
