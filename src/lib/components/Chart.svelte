@@ -514,10 +514,50 @@
 						</div>
 					`;
 
+					// Calculate tooltip dimensions
+					const tooltipWidth = 180;
+					const tooltipHeight = 140;
+
+					// Get container bounds
+					const containerRect = svgContainer.getBoundingClientRect();
+					const containerWidth = svgContainer.clientWidth;
+					const containerStyles = getComputedStyle(svgContainer);
+					const paddingLeft = parseFloat(containerStyles.paddingLeft) || 0;
+					const paddingTop = parseFloat(containerStyles.paddingTop) || 0;
+
+					// Get Y positions of all data points (in SVG coordinates)
+					const dataYPositions = [
+						yScale(closest.data.era5),
+						yScale(closest.data.upcoming),
+						yScale(closest.data.mid),
+						yScale(closest.data.end)
+					];
+					const minDataY = Math.min(...dataYPositions); // Highest point (smallest Y)
+					const maxDataY = Math.max(...dataYPositions); // Lowest point (largest Y)
+
+					// Horizontal position: center tooltip on the hover line
+					const lineX = paddingLeft + closest.x + margin.left;
+					let leftPos = lineX - tooltipWidth / 2;
+					// Clamp to container edges
+					leftPos = Math.max(4, Math.min(leftPos, containerWidth - tooltipWidth - 4));
+
+					// Vertical position: place tooltip above all data points
+					const dotRadius = 8; // hover dot radius + some padding
+					let topPos = paddingTop + margin.top + minDataY - tooltipHeight - dotRadius;
+
+					// If tooltip would go above container, place it below the data points instead
+					if (topPos < 4) {
+						topPos = paddingTop + margin.top + maxDataY + dotRadius;
+					}
+
+					// Final clamp
+					const maxTop = containerRect.height - tooltipHeight - 4;
+					topPos = Math.max(4, Math.min(topPos, maxTop));
+
 					tooltip
 						.html(tooltipHtml)
-						.style('left', `${event.offsetX + 20}px`)
-						.style('top', `${event.offsetY - 60}px`);
+						.style('left', `${leftPos}px`)
+						.style('top', `${topPos}px`);
 				}
 			});
 
