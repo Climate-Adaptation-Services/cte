@@ -19,9 +19,7 @@
 	$effect(() => {
 		// Track all temperature state values
 		const _ = [
-			appState.temperature.variable,
 			appState.temperature.threshold,
-			appState.temperature.threshold2,
 			appState.temperature.years,
 			appState.temperature.months
 		];
@@ -45,14 +43,7 @@
 
 	// Generate dynamic subtitle with current selection
 	const querySubtitle = $derived(() => {
-		let queryText = '';
-		if (appState.temperature.variable === 'Maximum temperature above') {
-			queryText = `Days with max temp above ${appState.temperature.threshold}°C`;
-		} else if (appState.temperature.variable === 'Minimum temperature below') {
-			queryText = `Days with min temp below ${appState.temperature.threshold}°C`;
-		} else {
-			queryText = `Days with avg temp between ${appState.temperature.threshold}°C - ${appState.temperature.threshold2}°C`;
-		}
+		const queryText = `Days with max temp above ${appState.temperature.threshold}°C`;
 
 		const startMonth = monthNames[appState.temperature.months[0] - 1];
 		const endMonth = monthNames[appState.temperature.months[1] - 1];

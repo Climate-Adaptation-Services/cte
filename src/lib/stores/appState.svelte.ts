@@ -6,12 +6,7 @@
 type Tab = "temperature";
 
 interface TemperatureState {
-  variable:
-    | "Maximum temperature above"
-    | "Minimum temperature below"
-    | "Average temperature between";
   threshold: number;
-  threshold2: number;
   years: "2011-2040" | "2041-2070" | "2071-2100";
   months: [number, number]; // [start, end] month (1-12)
 }
@@ -37,9 +32,7 @@ interface AppState {
 export const appState = $state<AppState>({
   activeTab: "temperature",
   temperature: {
-    variable: "Maximum temperature above",
     threshold: 25,
-    threshold2: 35,
     years: "2041-2070",
     months: [1, 12],
   },
@@ -73,9 +66,7 @@ export function setSelectedLocation(location: Location | null) {
 
 // Default values for reset
 const defaultTemperature: TemperatureState = {
-  variable: "Maximum temperature above",
   threshold: 25,
-  threshold2: 35,
   years: "2041-2070",
   months: [1, 12],
 };
@@ -91,18 +82,8 @@ export function getStateFromURL(): Partial<TemperatureState> | null {
   const params = new URLSearchParams(window.location.search);
   const state: Partial<TemperatureState> = {};
 
-  const variable = params.get('var');
-  if (variable === 'max' || variable === 'min' || variable === 'avg') {
-    state.variable = variable === 'max' ? 'Maximum temperature above'
-      : variable === 'min' ? 'Minimum temperature below'
-      : 'Average temperature between';
-  }
-
   const threshold = params.get('t1');
   if (threshold) state.threshold = parseInt(threshold);
-
-  const threshold2 = params.get('t2');
-  if (threshold2) state.threshold2 = parseInt(threshold2);
 
   const years = params.get('years');
   if (years === '2011-2040' || years === '2041-2070' || years === '2071-2100') {
@@ -125,16 +106,7 @@ export function updateURLFromState() {
 
   const params = new URLSearchParams();
 
-  const varMap = {
-    'Maximum temperature above': 'max',
-    'Minimum temperature below': 'min',
-    'Average temperature between': 'avg'
-  };
-  params.set('var', varMap[appState.temperature.variable]);
   params.set('t1', appState.temperature.threshold.toString());
-  if (appState.temperature.variable === 'Average temperature between') {
-    params.set('t2', appState.temperature.threshold2.toString());
-  }
   params.set('years', appState.temperature.years);
   params.set('months', `${appState.temperature.months[0]}-${appState.temperature.months[1]}`);
 

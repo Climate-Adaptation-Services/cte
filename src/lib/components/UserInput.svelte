@@ -8,7 +8,7 @@
 
 	// Tooltip content
 	const tooltips = {
-		temperature: 'Choose which temperature metric to analyze: maximum daily temperature (heat stress), minimum daily temperature (cold/frost), or average temperature range.',
+		temperature: 'Set the maximum temperature threshold. The map will show the number of days per year where the maximum daily temperature exceeds this value.',
 		period: 'Climate projections are grouped into 30-year periods. Earlier periods have less uncertainty, later periods show more pronounced climate change effects.',
 		months: 'Select a range of months to focus your analysis on specific seasons or time periods within the year.'
 	};
@@ -28,11 +28,6 @@
 		'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 	];
-
-	// Show/hide second threshold based on variable
-	let showThreshold2 = $derived(
-		appState.temperature.variable === 'Average temperature between'
-	);
 
 	// Ensure end month is always >= start month
 	$effect(() => {
@@ -56,26 +51,13 @@
 	}
 
 	// Custom dropdown state
-	let variableDropdownOpen = $state(false);
 	let yearsDropdownOpen = $state(false);
-
-	// Dropdown options
-	const variableOptions = [
-		{ value: 'Maximum temperature above' as const, label: 'Maximum temperature above' },
-		{ value: 'Minimum temperature below' as const, label: 'Minimum temperature below' },
-		{ value: 'Average temperature between' as const, label: 'Average temperature between' }
-	];
 
 	const yearsOptions = [
 		{ value: '2011-2040' as const, label: '2011-2040' },
 		{ value: '2041-2070' as const, label: '2041-2070' },
 		{ value: '2071-2100' as const, label: '2071-2100' }
 	];
-
-	function selectVariable(value: typeof appState.temperature.variable) {
-		updateTemperature({ variable: value });
-		variableDropdownOpen = false;
-	}
 
 	function selectYears(value: typeof appState.temperature.years) {
 		updateTemperature({ years: value });
@@ -87,12 +69,11 @@
 		function handleClickOutside(event: MouseEvent) {
 			const target = event.target as HTMLElement;
 			if (!target.closest('.custom-select')) {
-				variableDropdownOpen = false;
 				yearsDropdownOpen = false;
 			}
 		}
 
-		if (variableDropdownOpen || yearsDropdownOpen) {
+		if (yearsDropdownOpen) {
 			document.addEventListener('click', handleClickOutside);
 			return () => document.removeEventListener('click', handleClickOutside);
 		}
@@ -102,8 +83,8 @@
 <div class="user-input-container">
 	<!-- Header Section -->
 	<div class="section-header">
-		<h2 class="main-question">How often do temperature thresholds occur?</h2>
-		<p class="subtitle">Configure your climate query to analyze temperature patterns</p>
+		<h2 class="main-question">How often do maximum temperature thresholds occur?</h2>
+		<p class="subtitle">Configure your climate query to analyze maximum temperature patterns</p>
 		<button class="reset-btn" onclick={() => resetToDefaults()}>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -115,55 +96,23 @@
 
 	<!-- Sections 1 & 2: Side by side -->
 	<div class="sections-row">
-		<!-- Section 1: Temperature Condition (Primary) -->
+		<!-- Section 1: Temperature Threshold (Primary) -->
 		<div class="input-section primary">
 			<div class="section-header-inline">
 				<div class="section-number">1</div>
 				<div class="section-content">
 					<div class="label-with-tooltip">
-						<span class="section-label">Temperature condition</span>
+						<span class="section-label">Temperature threshold</span>
 						<button class="info-link" onclick={() => toggleTooltip('temperature')}>ⓘ</button>
 						{#if activeTooltip === 'temperature'}
 							<div class="tooltip">{tooltips.temperature}</div>
 						{/if}
 					</div>
-					<p class="section-description">Define the temperature threshold you want to analyze</p>
+					<p class="section-description">Number of days per year with maximum temperature above</p>
 				</div>
 			</div>
 
 			<div class="input-row">
-				<div class="input-group">
-					<label for="variable">Number of days per year with:</label>
-					<div class="custom-select" class:open={variableDropdownOpen}>
-						<button
-							type="button"
-							class="select-trigger"
-							onclick={() => variableDropdownOpen = !variableDropdownOpen}
-							aria-haspopup="listbox"
-							aria-expanded={variableDropdownOpen}
-						>
-							<span>{appState.temperature.variable}</span>
-							<svg class="select-arrow" class:rotated={variableDropdownOpen} width="10" height="6" viewBox="0 0 12 8" fill="none">
-								<path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-							</svg>
-						</button>
-						{#if variableDropdownOpen}
-							<div class="select-dropdown">
-								{#each variableOptions as option}
-									<button
-										type="button"
-										class="select-option"
-										class:selected={appState.temperature.variable === option.value}
-										onclick={() => selectVariable(option.value)}
-									>
-										{option.label}
-									</button>
-								{/each}
-							</div>
-						{/if}
-					</div>
-				</div>
-
 				<div class="input-group">
 					<label for="threshold">Threshold (°C)</label>
 					<input
@@ -173,19 +122,6 @@
 						min="-50"
 						max="60"
 						step="1"
-					/>
-				</div>
-
-				<div class="input-group" class:hidden={!showThreshold2}>
-					<label for="threshold2">Degrees °C</label>
-					<input
-						id="threshold2"
-						type="number"
-						bind:value={appState.temperature.threshold2}
-						min="-50"
-						max="60"
-						step="1"
-						disabled={!showThreshold2}
 					/>
 				</div>
 			</div>
@@ -444,10 +380,6 @@
 		max-width: 100%;
 	}
 
-	.input-group.hidden {
-		display: none;
-	}
-
 	label {
 		font-size: 0.75rem;
 		color: #495057;
@@ -478,14 +410,6 @@
 		border-color: #B5C4D3;
 		background: #FAFBFC;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-	}
-
-	input[type='number']:disabled {
-		background: #F5F7FA;
-		border-color: #E5E9EF;
-		cursor: not-allowed;
-		opacity: 0.6;
-		color: #9AA6B2;
 	}
 
 	input[type='number']:focus {
@@ -599,15 +523,6 @@
 
 	.select-option.selected:hover {
 		background: rgba(192, 255, 192, 0.8);
-	}
-
-	.slider-section {
-		margin-top: 0;
-		padding-top: 0;
-	}
-
-	.slider-label {
-		display: none;
 	}
 
 	.month-slider {

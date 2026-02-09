@@ -324,13 +324,8 @@
 			.style('fill', '#6b7280');
 		yAxis.selectAll('line').attr('stroke', '#d1d5db');
 
-		// Add Y axis label based on selected variable
-		let yAxisLabel = 'Temperature (°C)';
-		if (appState.temperature.variable === 'Maximum temperature above') {
-			yAxisLabel = 'Max Temp (°C)';
-		} else if (appState.temperature.variable === 'Minimum temperature below') {
-			yAxisLabel = 'Min Temp (°C)';
-		}
+		// Add Y axis label
+		const yAxisLabel = 'Max Temp (°C)';
 
 		svg!
 			.append('text')
@@ -561,15 +556,8 @@
 				}
 			});
 
-		// Generate dynamic title based on selected variable
-		let titleText = 'Monthly Temperature';
-		if (appState.temperature.variable === 'Maximum temperature above') {
-			titleText = 'Average Monthly Maximum Temperature';
-		} else if (appState.temperature.variable === 'Minimum temperature below') {
-			titleText = 'Average Monthly Minimum Temperature';
-		} else {
-			titleText = 'Average Monthly Temperature';
-		}
+		// Chart title
+		const titleText = 'Average Monthly Maximum Temperature';
 
 		// Format location coordinates
 		const lat = appState.selectedLocation?.lat;
@@ -712,15 +700,13 @@
 		// For selectedLocation, we need to watch the actual lat/lon values, not just the object
 		const locationLat = appState.selectedLocation?.lat;
 		const locationLon = appState.selectedLocation?.lon;
-		const variable = appState.temperature.variable;
 		const threshold = appState.temperature.threshold;
-		const threshold2 = appState.temperature.threshold2;
 		// For arrays, watch the individual elements
 		const monthStart = appState.temperature.months[0];
 		const monthEnd = appState.temperature.months[1];
 		const years = appState.temperature.years;
 
-		console.log('Chart $effect triggered', { locationLat, locationLon, variable, threshold, threshold2, monthStart, monthEnd, years });
+		console.log('Chart $effect triggered', { locationLat, locationLon, threshold, monthStart, monthEnd, years });
 
 		// Re-render chart whenever any of these change
 		if (svg) {
