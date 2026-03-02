@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getAppState, updateTemperature, resetToDefaults } from '$lib/stores/appState.svelte';
+	import { MIN_THRESHOLD, MAX_THRESHOLD } from '$lib/services/climateData';
 
 	const appState = getAppState();
 
@@ -10,6 +11,7 @@
 	const tooltips = {
 		temperature: 'Set the maximum temperature threshold. The map will show the number of days per year where the maximum daily temperature exceeds this value.',
 		period: 'Climate projections are grouped into 30-year periods. Earlier periods have less uncertainty, later periods show more pronounced climate change effects.',
+		scenario: 'Shared Socioeconomic Pathways (SSPs) represent different emission scenarios. SSP1-2.6 is low emissions, SSP3-7.0 is medium, and SSP5-8.5 is high emissions.',
 		months: 'Select a range of months to focus your analysis on specific seasons or time periods within the year.'
 	};
 
@@ -36,6 +38,16 @@
 		}
 	});
 
+	// Clamp threshold on blur (not while typing)
+	function clampThreshold() {
+		const t = appState.temperature.threshold;
+		if (isNaN(t) || t < MIN_THRESHOLD) {
+			updateTemperature({ threshold: MIN_THRESHOLD });
+		} else if (t > MAX_THRESHOLD) {
+			updateTemperature({ threshold: MAX_THRESHOLD });
+		}
+	}
+
 	// Calculate slider range position and width as percentages
 	const rangeLeftPercent = $derived(((appState.temperature.months[0] - 1) / 11) * 100);
 	const rangeWidthPercent = $derived(((appState.temperature.months[1] - appState.temperature.months[0]) / 11) * 100);
@@ -52,11 +64,17 @@
 
 	// Custom dropdown state
 	let yearsDropdownOpen = $state(false);
+	let scenarioDropdownOpen = $state(false);
 
 	const yearsOptions = [
-		{ value: '2011-2040' as const, label: '2011-2040' },
-		{ value: '2041-2070' as const, label: '2041-2070' },
-		{ value: '2071-2100' as const, label: '2071-2100' }
+		{ value: '2036-2065' as const, label: '2036-2065' },
+		{ value: '2066-2095' as const, label: '2066-2095' }
+	];
+
+	const scenarioOptions = [
+		{ value: 'ssp126' as const, label: 'SSP1-2.6', description: 'Low emissions' },
+		{ value: 'ssp370' as const, label: 'SSP3-7.0', description: 'Medium emissions' },
+		{ value: 'ssp585' as const, label: 'SSP5-8.5', description: 'High emissions' }
 	];
 
 	function selectYears(value: typeof appState.temperature.years) {
@@ -64,16 +82,27 @@
 		yearsDropdownOpen = false;
 	}
 
+	function selectScenario(value: typeof appState.temperature.scenario) {
+		updateTemperature({ scenario: value });
+		scenarioDropdownOpen = false;
+	}
+
+	// Get current scenario label
+	const currentScenarioLabel = $derived(
+		scenarioOptions.find(o => o.value === appState.temperature.scenario)?.label || appState.temperature.scenario
+	);
+
 	// Close dropdowns when clicking outside
 	$effect(() => {
 		function handleClickOutside(event: MouseEvent) {
 			const target = event.target as HTMLElement;
 			if (!target.closest('.custom-select')) {
 				yearsDropdownOpen = false;
+				scenarioDropdownOpen = false;
 			}
 		}
 
-		if (yearsDropdownOpen) {
+		if (yearsDropdownOpen || scenarioDropdownOpen) {
 			document.addEventListener('click', handleClickOutside);
 			return () => document.removeEventListener('click', handleClickOutside);
 		}
@@ -103,7 +132,7 @@
 				<div class="section-content">
 					<div class="label-with-tooltip">
 						<span class="section-label">Temperature threshold</span>
-						<button class="info-link" onclick={() => toggleTooltip('temperature')}>ⓘ</button>
+						<button class="info-link" onclick={() => toggleTooltip('temperature')}>&#9432;</button>
 						{#if activeTooltip === 'temperature'}
 							<div class="tooltip">{tooltips.temperature}</div>
 						{/if}
@@ -114,42 +143,45 @@
 
 			<div class="input-row">
 				<div class="input-group">
-					<label for="threshold">Threshold (°C)</label>
+					<label for="threshold">Threshold ({MIN_THRESHOLD}-{MAX_THRESHOLD}°C)</label>
 					<input
 						id="threshold"
 						type="number"
 						bind:value={appState.temperature.threshold}
-						min="-50"
-						max="60"
+						min={MIN_THRESHOLD}
+						max={MAX_THRESHOLD}
 						step="1"
+						onblur={clampThreshold}
 					/>
 				</div>
 			</div>
 		</div>
 
-		<!-- Section 2: Time Period (Secondary) -->
+		<!-- Section 2: Time Period & Scenario -->
 		<div class="input-section secondary">
 			<div class="section-header-inline">
 				<div class="section-number">2</div>
 				<div class="section-content">
 					<div class="label-with-tooltip">
-						<span class="section-label">Future time period</span>
-						<button class="info-link" onclick={() => toggleTooltip('period')}>ⓘ</button>
+						<span class="section-label">Future projection</span>
+						<button class="info-link" onclick={() => toggleTooltip('period')}>&#9432;</button>
 						{#if activeTooltip === 'period'}
 							<div class="tooltip">{tooltips.period}</div>
 						{/if}
 					</div>
-					<p class="section-description">Select which future period to analyze</p>
+					<p class="section-description">Select period and emission scenario</p>
 				</div>
 			</div>
 
 			<div class="input-row">
 				<div class="input-group compact">
+					<label for="period-select">Period</label>
 					<div class="custom-select" class:open={yearsDropdownOpen}>
 						<button
+							id="period-select"
 							type="button"
 							class="select-trigger"
-							onclick={() => yearsDropdownOpen = !yearsDropdownOpen}
+							onclick={() => { yearsDropdownOpen = !yearsDropdownOpen; scenarioDropdownOpen = false; }}
 							aria-haspopup="listbox"
 							aria-expanded={yearsDropdownOpen}
 						>
@@ -174,6 +206,44 @@
 						{/if}
 					</div>
 				</div>
+				<div class="input-group compact">
+					<label>
+						Scenario
+						<button class="info-link" onclick={() => toggleTooltip('scenario')}>&#9432;</button>
+						{#if activeTooltip === 'scenario'}
+							<div class="tooltip">{tooltips.scenario}</div>
+						{/if}
+					</label>
+					<div class="custom-select" class:open={scenarioDropdownOpen}>
+						<button
+							type="button"
+							class="select-trigger"
+							onclick={() => { scenarioDropdownOpen = !scenarioDropdownOpen; yearsDropdownOpen = false; }}
+							aria-haspopup="listbox"
+							aria-expanded={scenarioDropdownOpen}
+						>
+							<span>{currentScenarioLabel}</span>
+							<svg class="select-arrow" class:rotated={scenarioDropdownOpen} width="10" height="6" viewBox="0 0 12 8" fill="none">
+								<path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</button>
+						{#if scenarioDropdownOpen}
+							<div class="select-dropdown">
+								{#each scenarioOptions as option}
+									<button
+										type="button"
+										class="select-option"
+										class:selected={appState.temperature.scenario === option.value}
+										onclick={() => selectScenario(option.value)}
+									>
+										<span>{option.label}</span>
+										<span class="option-desc">{option.description}</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -185,7 +255,7 @@
 			<div class="section-content">
 				<div class="label-with-tooltip">
 					<span class="section-label">Select months</span>
-					<button class="info-link" onclick={() => toggleTooltip('months')}>ⓘ</button>
+					<button class="info-link" onclick={() => toggleTooltip('months')}>&#9432;</button>
 					{#if activeTooltip === 'months'}
 						<div class="tooltip">{tooltips.months}</div>
 					{/if}
@@ -376,8 +446,14 @@
 
 	.input-group.compact {
 		flex: 1;
-		min-width: 180px;
+		min-width: 130px;
 		max-width: 100%;
+	}
+
+	.option-desc {
+		font-size: 0.7rem;
+		color: #6c757d;
+		margin-left: 0.5rem;
 	}
 
 	label {

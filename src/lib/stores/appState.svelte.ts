@@ -3,11 +3,14 @@
  * Uses Svelte 5 runes for reactivity
  */
 
+import type { Scenario, FuturePeriod } from '$lib/services/climateData';
+
 type Tab = "temperature";
 
 interface TemperatureState {
   threshold: number;
-  years: "2011-2040" | "2041-2070" | "2071-2100";
+  years: FuturePeriod;
+  scenario: Scenario;
   months: [number, number]; // [start, end] month (1-12)
 }
 
@@ -26,6 +29,7 @@ interface AppState {
   temperature: TemperatureState;
   mapView: MapView;
   selectedLocation: Location | null;
+  dataLoaded: boolean;
 }
 
 // Create reactive state - export directly for better reactivity
@@ -33,7 +37,8 @@ export const appState = $state<AppState>({
   activeTab: "temperature",
   temperature: {
     threshold: 25,
-    years: "2041-2070",
+    years: "2036-2065",
+    scenario: "ssp370",
     months: [1, 12],
   },
   mapView: {
@@ -41,6 +46,7 @@ export const appState = $state<AppState>({
     zoom: 5.5,
   },
   selectedLocation: null,
+  dataLoaded: false,
 });
 
 // Determine which grid to use - always use kenia.geojson for temperature
@@ -64,10 +70,15 @@ export function setSelectedLocation(location: Location | null) {
   appState.selectedLocation = location;
 }
 
+export function setDataLoaded(loaded: boolean) {
+  appState.dataLoaded = loaded;
+}
+
 // Default values for reset
 const defaultTemperature: TemperatureState = {
   threshold: 25,
-  years: "2041-2070",
+  years: "2036-2065",
+  scenario: "ssp370",
   months: [1, 12],
 };
 
@@ -83,11 +94,19 @@ export function getStateFromURL(): Partial<TemperatureState> | null {
   const state: Partial<TemperatureState> = {};
 
   const threshold = params.get('t1');
-  if (threshold) state.threshold = parseInt(threshold);
+  if (threshold) {
+    const t = parseInt(threshold);
+    if (t >= 15 && t <= 40) state.threshold = t;
+  }
 
   const years = params.get('years');
-  if (years === '2011-2040' || years === '2041-2070' || years === '2071-2100') {
+  if (years === '2036-2065' || years === '2066-2095') {
     state.years = years;
+  }
+
+  const scenario = params.get('scenario');
+  if (scenario === 'ssp126' || scenario === 'ssp370' || scenario === 'ssp585') {
+    state.scenario = scenario;
   }
 
   const months = params.get('months');
@@ -108,6 +127,7 @@ export function updateURLFromState() {
 
   params.set('t1', appState.temperature.threshold.toString());
   params.set('years', appState.temperature.years);
+  params.set('scenario', appState.temperature.scenario);
   params.set('months', `${appState.temperature.months[0]}-${appState.temperature.months[1]}`);
 
   const newURL = `${window.location.pathname}?${params.toString()}`;

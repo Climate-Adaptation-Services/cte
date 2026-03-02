@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { getAppState, updateMapView, setSelectedLocation } from '$lib/stores/appState.svelte';
+	import {
+		getGridData,
+		getLocationData,
+		snapToGrid,
+		sumMonthRange,
+		type Scenario,
+		type Period,
+		type MonthlyData
+	} from '$lib/services/climateData';
+	import * as d3 from 'd3';
 	import type L from 'leaflet';
 
 	interface MapProps {
@@ -16,145 +26,138 @@
 	let mapContainer: HTMLDivElement;
 	let map: L.Map | null = null;
 	let geoJsonLayer: L.GeoJSON | null = null;
+	let leafletModule: any = null;
+	let geojsonData: any = null;
 	let isInitialized = false;
 	let isProgrammaticUpdate = false;
 	let isLoading = $state(true);
 	let showTouchHint = $state(false);
 	let touchHintTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	// Load Leaflet dynamically (client-side only)
+	// Pre-computed snap cache: feature index → snapped "lat_lon" key
+	let snapCache: Map<number, string> = new Map();
+	// Pre-computed parsed coords: feature index → [lat, lon]
+	let coordCache: Map<number, [number, number]> = new Map();
+
+	// Dynamic tooltip element
+	let tooltipLayer: any = null;
+
+	// Determine scenario and period for this map
+	function getMapScenario(): Scenario {
+		return period === 'Historic' ? 'historical' : appState.temperature.scenario;
+	}
+
+	function getMapPeriod(): Period {
+		return period === 'Historic' ? '1981-2010' : appState.temperature.years;
+	}
+
+	// Legend state
+	let legendMin = $state(0);
+	let legendMax = $state(100);
+
+	const scenarioLabels: Record<string, string> = {
+		ssp126: 'SSP1-2.6',
+		ssp370: 'SSP3-7.0',
+		ssp585: 'SSP5-8.5'
+	};
+
+	function getColor(value: number, minVal: number, maxVal: number): string {
+		if (maxVal <= minVal) return '#ffffcc';
+		const ratio = Math.max(0, Math.min(1, (value - minVal) / (maxVal - minVal)));
+		return d3.interpolateYlOrRd(ratio * 0.85 + 0.1) as string;
+	}
+
+	// Build the snap cache once from geojsonData
+	function buildSnapCache() {
+		if (!geojsonData) return;
+		snapCache = new Map();
+		coordCache = new Map();
+		for (let i = 0; i < geojsonData.features.length; i++) {
+			const feature = geojsonData.features[i];
+			const lat_lon = feature.properties?.lat_lon || '';
+			const [lat, lon] = lat_lon.split('_').map(parseFloat);
+			const snappedKey = `${snapToGrid(lat)}_${snapToGrid(lon)}`;
+			snapCache.set(i, snappedKey);
+			coordCache.set(i, [lat, lon]);
+		}
+	}
+
 	onMount(() => {
 		(async () => {
-			// Import Leaflet
 			const L = (await import('leaflet')).default;
+			leafletModule = L;
 
-			// Import Leaflet CSS
 			const link = document.createElement('link');
 			link.rel = 'stylesheet';
 			link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 			document.head.appendChild(link);
 
-			// Check if mobile device
 			const isMobile = window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window;
 
-			// Initialize map
 			map = L.map(mapContainer, {
 				zoomControl: true,
 				attributionControl: true,
 				scrollWheelZoom: false,
-				dragging: !isMobile, // Disable dragging on mobile (requires 2 fingers)
-				tap: false // Disable tap handler on mobile
+				dragging: !isMobile
 			}).setView(
 				[appState.mapView.center[0], appState.mapView.center[1]],
 				appState.mapView.zoom
 			);
 
-			// Add OpenStreetMap tile layer
 			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '© OpenStreetMap contributors',
+				attribution: '&copy; OpenStreetMap contributors',
 				maxZoom: 19
 			}).addTo(map);
 
-			// Handle map move events
 			map.on('moveend', () => {
 				if (!map) return;
-
-				// Skip if this is a programmatic update from the other map
 				if (isProgrammaticUpdate) {
-					console.log(`[${mapId}] Skipping programmatic update`);
 					isProgrammaticUpdate = false;
 					return;
 				}
-
 				const center = map.getCenter();
 				const zoom = map.getZoom();
-
-				// Only update if this is a user interaction (not programmatic)
 				if (isInitialized) {
-					console.log(`[${mapId}] User moved map, updating store:`, { center: [center.lat, center.lng], zoom });
-					updateMapView({
-						center: [center.lat, center.lng],
-						zoom
-					});
+					updateMapView({ center: [center.lat, center.lng], zoom });
 				}
 			});
 
-			// Add touch hint for mobile users
 			if (isMobile) {
 				mapContainer.addEventListener('touchstart', (e) => {
 					if (e.touches.length === 1) {
-						// Single finger touch - show hint
 						showTouchHint = true;
 						if (touchHintTimeout) clearTimeout(touchHintTimeout);
-						touchHintTimeout = setTimeout(() => {
-							showTouchHint = false;
-						}, 2000);
+						touchHintTimeout = setTimeout(() => { showTouchHint = false; }, 2000);
 					}
 				});
-
 				mapContainer.addEventListener('touchmove', (e) => {
 					if (e.touches.length >= 2) {
-						// Two finger gesture - enable dragging temporarily and hide hint
 						showTouchHint = false;
 						map!.dragging.enable();
 					}
 				});
-
 				mapContainer.addEventListener('touchend', () => {
-					// Re-disable dragging after gesture ends
-					if (isMobile) {
-						map!.dragging.disable();
-					}
+					if (isMobile) map!.dragging.disable();
 				});
 			}
 
-			// Load GeoJSON data
 			await loadGeoJSONData(L);
-
 			isInitialized = true;
 		})();
 
-		// Cleanup function
-		return () => {
-			map?.remove();
-		};
+		return () => { map?.remove(); };
 	});
 
 	async function loadGeoJSONData(L: any) {
 		try {
-			// Load kenia.geojson grid
-			const gridFile = 'kenia.geojson';
+			const response = await fetch(`/data/grids/kenia.geojson`);
+			geojsonData = await response.json();
 
-			const response = await fetch(`/data/grids/${gridFile}`);
-			const geojsonData = await response.json();
+			// Pre-compute snap cache (once, never changes)
+			buildSnapCache();
 
-			// Create choropleth layer
-			if (geoJsonLayer && map) {
-				map.removeLayer(geoJsonLayer);
-			}
-
-			geoJsonLayer = L.geoJSON(geojsonData, {
-				style: function (feature: any) {
-					return getFeatureStyle(feature);
-				},
-				onEachFeature: function (feature: any, layer: any) {
-					// Add click handler
-					layer.on('click', function () {
-						handleFeatureClick(feature);
-					});
-
-					// Add hover tooltip
-					const lat_lon = feature.properties?.lat_lon || '';
-					const [lat, lon] = lat_lon.split('_').map(parseFloat);
-
-					layer.bindTooltip(
-						`<b>Location:</b> ${lat.toFixed(2)}, ${lon.toFixed(2)}<br>` +
-						`<b>Current:</b> Sample data<br>` +
-						`<b>Future:</b> Sample data`,
-						{ sticky: true }
-					);
-				}
-			}).addTo(map!);
+			// Create the GeoJSON layer ONCE
+			createGeoJSONLayer(L);
 
 			isLoading = false;
 		} catch (error) {
@@ -163,23 +166,131 @@
 		}
 	}
 
-	function getFeatureStyle(feature: any): any {
-		// Sample color based on feature index (replace with actual data later)
-		const value = Math.random() * 100;
+	/**
+	 * Create the GeoJSON layer once with click handlers and dynamic tooltip.
+	 * Styling is done separately via updateStyles().
+	 */
+	function createGeoJSONLayer(L: any) {
+		if (!map || !geojsonData) return;
 
-		// Color scale (blue to red)
-		let color = '#ffffcc';
-		if (value > 80) color = '#bd0026';
-		else if (value > 60) color = '#f03b20';
-		else if (value > 40) color = '#fd8d3c';
-		else if (value > 20) color = '#fecc5c';
+		// Create a single tooltip to reuse
+		tooltipLayer = L.tooltip({ sticky: true });
 
-		return {
-			fillColor: color,
-			weight: 0,
-			opacity: 0.7,
-			fillOpacity: 0.7
-		};
+		geoJsonLayer = L.geoJSON(geojsonData, {
+			// Initial style: gray (will be updated immediately)
+			style: () => ({ fillColor: '#e0e0e0', weight: 0, opacity: 0.3, fillOpacity: 0.3 }),
+			onEachFeature: function (feature: any, layer: any) {
+				// Store feature index on the layer for fast lookups
+				const idx = geojsonData.features.indexOf(feature);
+				(layer as any)._featureIdx = idx;
+
+				layer.on('click', () => handleFeatureClick(feature));
+
+				// Dynamic tooltip: compute content on hover
+				layer.on('mouseover', function (e: any) {
+					const content = getTooltipContent(idx);
+					if (content) {
+						tooltipLayer.setContent(content);
+						tooltipLayer.setLatLng(e.latlng);
+						if (map) map.openTooltip(tooltipLayer);
+					}
+				});
+
+				layer.on('mousemove', function (e: any) {
+					tooltipLayer.setLatLng(e.latlng);
+				});
+
+				layer.on('mouseout', function () {
+					if (map) map.closeTooltip(tooltipLayer);
+				});
+			}
+		}).addTo(map);
+
+		// Apply initial styles
+		updateStyles();
+	}
+
+	/**
+	 * Generate tooltip HTML for a feature. Called on hover only (not pre-computed).
+	 */
+	function getTooltipContent(featureIdx: number): string | null {
+		const coords = coordCache.get(featureIdx);
+		if (!coords) return null;
+		const [lat, lon] = coords;
+
+		const threshold = appState.temperature.threshold;
+		const monthStart = appState.temperature.months[0];
+		const monthEnd = appState.temperature.months[1];
+
+		const histData = getLocationData('historical', '1981-2010', threshold, lat, lon);
+		const futureData = getLocationData(appState.temperature.scenario, appState.temperature.years, threshold, lat, lon);
+
+		if (!histData && !futureData) {
+			return `<b>${lat.toFixed(2)}, ${lon.toFixed(2)}</b><br><b>No data available</b>`;
+		}
+
+		const histVal = histData ? Math.round(sumMonthRange(histData, monthStart, monthEnd)) : null;
+		const futVal = futureData ? Math.round(sumMonthRange(futureData, monthStart, monthEnd)) : null;
+
+		const scenarioLabel = scenarioLabels[appState.temperature.scenario] || appState.temperature.scenario;
+
+		let diff = '';
+		if (histVal !== null && futVal !== null) {
+			const delta = futVal - histVal;
+			const sign = delta > 0 ? '+' : '';
+			diff = `<br><b>Change:</b> <span style="color:${delta > 0 ? '#dc2626' : delta < 0 ? '#16a34a' : '#666'}">${sign}${delta} days</span>`;
+		}
+
+		return `<b>${lat.toFixed(2)}, ${lon.toFixed(2)}</b><br>` +
+			`<b>Historical:</b> ${histVal !== null ? histVal + ' days' : 'N/A'}<br>` +
+			`<b>${scenarioLabel} ${appState.temperature.years}:</b> ${futVal !== null ? futVal + ' days' : 'N/A'}` +
+			diff;
+	}
+
+	/**
+	 * Fast style update - only recomputes colors, doesn't recreate the layer.
+	 */
+	function updateStyles() {
+		if (!geoJsonLayer) return;
+
+		const scenario = getMapScenario();
+		const mapPeriod = getMapPeriod();
+		const threshold = appState.temperature.threshold;
+		const monthStart = appState.temperature.months[0];
+		const monthEnd = appState.temperature.months[1];
+
+		// O(1) lookup for the grid data
+		const gridData = getGridData(scenario, mapPeriod, threshold);
+
+		// Compute min/max from the ~323 grid cells (fast)
+		let minVal = Infinity;
+		let maxVal = -Infinity;
+		for (const data of gridData.values()) {
+			const value = sumMonthRange(data, monthStart, monthEnd);
+			if (value < minVal) minVal = value;
+			if (value > maxVal) maxVal = value;
+		}
+		if (minVal === Infinity) { minVal = 0; maxVal = 0; }
+
+		legendMin = Math.round(minVal);
+		legendMax = Math.round(maxVal);
+
+		// Update each feature's style (Leaflet setStyle is much faster than recreating)
+		geoJsonLayer.eachLayer((layer: any) => {
+			const idx: number = layer._featureIdx;
+			const snappedKey = snapCache.get(idx);
+			if (snappedKey === undefined) return;
+
+			const data = gridData.get(snappedKey);
+			if (!data) {
+				layer.setStyle({ fillColor: '#e0e0e0', weight: 0, opacity: 0.3, fillOpacity: 0.3 });
+				return;
+			}
+
+			const value = sumMonthRange(data, monthStart, monthEnd);
+			const color = getColor(value, minVal, maxVal);
+			layer.setStyle({ fillColor: color, weight: 0, opacity: 0.7, fillOpacity: 0.7 });
+		});
 	}
 
 	function handleFeatureClick(feature: any) {
@@ -190,28 +301,37 @@
 		}
 	}
 
-	// Reactive: Update map view when store changes (from other map)
+	// Re-style when climate parameters change (fast - no layer recreation)
 	$effect(() => {
-		// Explicitly track these values for reactivity
+		const _ = [
+			appState.temperature.threshold,
+			appState.temperature.years,
+			appState.temperature.scenario,
+			appState.temperature.months[0],
+			appState.temperature.months[1],
+			appState.dataLoaded
+		];
+
+		if (geoJsonLayer && appState.dataLoaded) {
+			updateStyles();
+		}
+	});
+
+	// Sync map view from other map
+	$effect(() => {
 		const center = appState.mapView.center;
 		const zoom = appState.mapView.zoom;
 
 		if (map && isInitialized) {
 			const currentCenter = map.getCenter();
 			const currentZoom = map.getZoom();
-
 			const [newLat, newLon] = center;
 
-			console.log(`[${mapId}] $effect triggered, store:`, { center, zoom }, 'current:', { center: [currentCenter.lat, currentCenter.lng], zoom: currentZoom });
-
-			// Only update if different (avoid infinite loop)
 			if (
 				Math.abs(currentCenter.lat - newLat) > 0.001 ||
 				Math.abs(currentCenter.lng - newLon) > 0.001 ||
 				currentZoom !== zoom
 			) {
-				console.log(`[${mapId}] Updating map view from store`);
-				// Mark as programmatic update to prevent feedback loop
 				isProgrammaticUpdate = true;
 				map.setView([newLat, newLon], zoom);
 			}
@@ -234,12 +354,15 @@
 	<div id={mapId} bind:this={mapContainer} class="map"></div>
 	{#if showLegend}
 		<div class="legend">
-			<div class="legend-title">Days</div>
-			<div class="legend-item"><span class="legend-color" style="background: #bd0026"></span> 80-100</div>
-			<div class="legend-item"><span class="legend-color" style="background: #f03b20"></span> 60-80</div>
-			<div class="legend-item"><span class="legend-color" style="background: #fd8d3c"></span> 40-60</div>
-			<div class="legend-item"><span class="legend-color" style="background: #fecc5c"></span> 20-40</div>
-			<div class="legend-item"><span class="legend-color" style="background: #ffffcc"></span> 0-20</div>
+			<div class="legend-title">Days above {appState.temperature.threshold}°C</div>
+			<div class="legend-gradient">
+				<div class="gradient-bar"></div>
+				<div class="gradient-labels">
+					<span>{legendMin}</span>
+					<span>{Math.round((legendMin + legendMax) / 2)}</span>
+					<span>{legendMax}</span>
+				</div>
+			</div>
 		</div>
 	{/if}
 </div>
@@ -273,22 +396,35 @@
 	.legend-title {
 		font-weight: bold;
 		margin-bottom: 8px;
-		font-size: 14px;
+		font-size: 13px;
 	}
 
-	.legend-item {
-		display: flex;
-		align-items: center;
-		margin: 4px 0;
-		font-size: 12px;
+	.legend-gradient {
+		width: 100%;
 	}
 
-	.legend-color {
-		display: inline-block;
-		width: 20px;
-		height: 15px;
-		margin-right: 8px;
+	.gradient-bar {
+		width: 100%;
+		height: 14px;
+		border-radius: 3px;
 		border: 1px solid #ccc;
+		background: linear-gradient(to right,
+			#ffffcc 0%,
+			#fed976 15%,
+			#feb24c 30%,
+			#fd8d3c 45%,
+			#f03b20 65%,
+			#bd0026 85%,
+			#800026 100%
+		);
+	}
+
+	.gradient-labels {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 4px;
+		font-size: 11px;
+		color: #555;
 	}
 
 	/* Touch hint overlay */
@@ -373,15 +509,8 @@
 			margin-bottom: 6px;
 		}
 
-		.legend-item {
-			font-size: 11px;
-			margin: 3px 0;
-		}
-
-		.legend-color {
-			width: 16px;
-			height: 12px;
-			margin-right: 6px;
+		.gradient-labels {
+			font-size: 10px;
 		}
 
 		.loading-overlay p {
@@ -412,15 +541,8 @@
 			margin-bottom: 4px;
 		}
 
-		.legend-item {
-			font-size: 10px;
-			margin: 2px 0;
-		}
-
-		.legend-color {
-			width: 14px;
-			height: 10px;
-			margin-right: 4px;
+		.gradient-labels {
+			font-size: 9px;
 		}
 	}
 </style>

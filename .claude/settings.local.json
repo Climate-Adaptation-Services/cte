@@ -7,7 +7,12 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(npm run check:*)",
-      "WebFetch(domain:climateadaptationservices.com)"
+      "WebFetch(domain:climateadaptationservices.com)",
+      "Bash(python3 -c \":*)",
+      "Bash(python -c \":*)",
+      "Bash(npx svelte-check)",
+      "Bash(npm run dev)",
+      "Bash(timeout 10 npx vite dev --port 5173)"
     ]
   }
 }

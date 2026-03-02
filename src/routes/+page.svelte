@@ -3,24 +3,36 @@
 	import UserInput from '$lib/components/UserInput.svelte';
 	import Map from '$lib/components/Map.svelte';
 	import Chart from '$lib/components/Chart.svelte';
-	import { getAppState, updateTemperature, getStateFromURL, updateURLFromState } from '$lib/stores/appState.svelte';
+	import { getAppState, updateTemperature, getStateFromURL, updateURLFromState, setDataLoaded } from '$lib/stores/appState.svelte';
+	import { loadClimateData } from '$lib/services/climateData';
 
 	const appState = getAppState();
 
-	// Load state from URL on mount
-	onMount(() => {
+	let dataLoadingError = $state<string | null>(null);
+
+	// Load state from URL and climate data on mount
+	onMount(async () => {
 		const urlState = getStateFromURL();
 		if (urlState) {
 			updateTemperature(urlState);
+		}
+
+		// Load climate CSV data
+		try {
+			await loadClimateData();
+			setDataLoaded(true);
+		} catch (error) {
+			console.error('Failed to load climate data:', error);
+			dataLoadingError = 'Failed to load climate data. Please refresh the page.';
 		}
 	});
 
 	// Update URL when state changes
 	$effect(() => {
-		// Track all temperature state values
 		const _ = [
 			appState.temperature.threshold,
 			appState.temperature.years,
+			appState.temperature.scenario,
 			appState.temperature.months
 		];
 		updateURLFromState();
@@ -41,20 +53,41 @@
 		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 	];
 
+	const scenarioLabels: Record<string, string> = {
+		ssp126: 'SSP1-2.6',
+		ssp370: 'SSP3-7.0',
+		ssp585: 'SSP5-8.5'
+	};
+
 	// Generate dynamic subtitle with current selection
 	const querySubtitle = $derived(() => {
-		const queryText = `Days with max temp above ${appState.temperature.threshold}°C`;
+		const queryText = `Days with max temp above ${appState.temperature.threshold}\u00B0C`;
 
 		const startMonth = monthNames[appState.temperature.months[0] - 1];
 		const endMonth = monthNames[appState.temperature.months[1] - 1];
 		const monthRange = startMonth === endMonth ? startMonth : `${startMonth} - ${endMonth}`;
 
-		return `${queryText} | ${appState.temperature.years} | ${monthRange}`;
+		const scenario = scenarioLabels[appState.temperature.scenario] || appState.temperature.scenario;
+
+		return `${queryText} | ${scenario} ${appState.temperature.years} | ${monthRange}`;
 	});
 </script>
 
 <div class="container">
 	<UserInput />
+
+	{#if dataLoadingError}
+		<div class="error-banner">
+			<p>{dataLoadingError}</p>
+		</div>
+	{/if}
+
+	{#if !appState.dataLoaded}
+		<div class="loading-banner">
+			<div class="loading-spinner"></div>
+			<p>Loading climate data...</p>
+		</div>
+	{/if}
 
 	<div class="maps-section">
 		<div class="maps-header">
@@ -79,11 +112,11 @@
 
 		<div class="maps-container">
 			<div class="map-wrapper map-left">
-				<p class="map-title">Current climate</p>
+				<p class="map-title">Historical (1981-2010)</p>
 				<Map mapId="map_left" period="Historic" showLegend={true} />
 			</div>
 			<div class="map-wrapper map-right">
-				<p class="map-title">Future climate</p>
+				<p class="map-title">{scenarioLabels[appState.temperature.scenario] || ''} ({appState.temperature.years})</p>
 				<Map mapId="map_right" period="Projection" showLegend={false} />
 			</div>
 		</div>
@@ -104,6 +137,49 @@
 		margin-left: 30px;
 		margin-right: 30px;
 		padding: 20px 0;
+	}
+
+	.loading-banner {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		padding: 1rem;
+		margin-bottom: 1rem;
+		background: #f0f9ff;
+		border: 1px solid #bae6fd;
+		border-radius: 8px;
+		color: #0369a1;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.loading-spinner {
+		width: 20px;
+		height: 20px;
+		border: 2px solid #bae6fd;
+		border-top-color: #0369a1;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+
+	.error-banner {
+		padding: 1rem;
+		margin-bottom: 1rem;
+		background: #fef2f2;
+		border: 1px solid #fecaca;
+		border-radius: 8px;
+		color: #dc2626;
+		font-size: 0.875rem;
+		text-align: center;
+	}
+
+	.error-banner p {
+		margin: 0;
 	}
 
 	.maps-section {
