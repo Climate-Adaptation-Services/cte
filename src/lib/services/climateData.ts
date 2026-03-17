@@ -1,6 +1,6 @@
 /**
  * Climate data service - loads and provides access to climate indicator data
- * Data source: clim_indicators_thresholdTool_KEN.csv
+ * Data source: clim_indicators_thresholdTool_medianEnsemble_KEN.csv
  *
  * Uses a nested index for O(1) grid lookups instead of linear scans.
  */
@@ -56,7 +56,7 @@ export async function loadClimateData(): Promise<void> {
 	if (dataIndex) return;
 	if (loadingPromise) return loadingPromise;
 
-	loadingPromise = fetch('/data/clim_indicators_thresholdTool_KEN.csv')
+	loadingPromise = fetch('/data/clim_indicators_thresholdTool_medianEnsemble_KEN.csv')
 		.then((res) => res.text())
 		.then((text) => {
 			const rows = d3.csvParse(text);
