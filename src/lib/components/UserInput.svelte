@@ -67,8 +67,8 @@
 	let scenarioDropdownOpen = $state(false);
 
 	const yearsOptions = [
-		{ value: '2036-2065' as const, label: '2036-2065' },
-		{ value: '2066-2095' as const, label: '2066-2095' }
+		{ value: '2036-2065' as const, label: '2036-2065', description: 'Around 2050' },
+		{ value: '2066-2095' as const, label: '2066-2095', description: 'Around 2080' }
 	];
 
 	const scenarioOptions = [
@@ -89,7 +89,7 @@
 
 	// Get current scenario label
 	const currentScenarioLabel = $derived(
-		scenarioOptions.find(o => o.value === appState.temperature.scenario)?.label || appState.temperature.scenario
+		scenarioOptions.find(o => o.value === appState.temperature.scenario)?.description || appState.temperature.scenario
 	);
 
 	// Close dropdowns when clicking outside
@@ -113,7 +113,6 @@
 	<!-- Header Section -->
 	<div class="section-header">
 		<h2 class="main-question">How often do maximum temperature thresholds occur?</h2>
-		<p class="subtitle">Configure your climate query to analyze maximum temperature patterns</p>
 		<button class="reset-btn" onclick={() => resetToDefaults()}>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -185,7 +184,7 @@
 							aria-haspopup="listbox"
 							aria-expanded={yearsDropdownOpen}
 						>
-							<span>{appState.temperature.years}</span>
+							<span>{yearsOptions.find(o => o.value === appState.temperature.years)?.description || appState.temperature.years}</span>
 							<svg class="select-arrow" class:rotated={yearsDropdownOpen} width="10" height="6" viewBox="0 0 12 8" fill="none">
 								<path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 							</svg>
@@ -199,7 +198,8 @@
 										class:selected={appState.temperature.years === option.value}
 										onclick={() => selectYears(option.value)}
 									>
-										{option.label}
+										<span>{option.description}</span>
+										<span class="option-desc">{option.label}</span>
 									</button>
 								{/each}
 							</div>
@@ -236,8 +236,8 @@
 										class:selected={appState.temperature.scenario === option.value}
 										onclick={() => selectScenario(option.value)}
 									>
-										<span>{option.label}</span>
-										<span class="option-desc">{option.description}</span>
+										<span>{option.description}</span>
+										<span class="option-desc">{option.label}</span>
 									</button>
 								{/each}
 							</div>
