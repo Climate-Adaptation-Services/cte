@@ -3,7 +3,7 @@
 	import UserInput from '$lib/components/UserInput.svelte';
 	import Map from '$lib/components/Map.svelte';
 	import Chart from '$lib/components/Chart.svelte';
-	import { getAppState, updateTemperature, getStateFromURL, updateURLFromState, setDataLoaded } from '$lib/stores/appState.svelte';
+	import { getAppState, updateTemperature, getStateFromURL, getLocationFromURL, updateURLFromState, setDataLoaded, setSelectedLocation } from '$lib/stores/appState.svelte';
 	import { loadClimateData } from '$lib/services/climateData';
 
 	const appState = getAppState();
@@ -15,6 +15,11 @@
 		const urlState = getStateFromURL();
 		if (urlState) {
 			updateTemperature(urlState);
+		}
+
+		const urlLocation = getLocationFromURL();
+		if (urlLocation) {
+			setSelectedLocation(urlLocation);
 		}
 
 		// Load climate CSV data
@@ -33,19 +38,12 @@
 			appState.temperature.threshold,
 			appState.temperature.years,
 			appState.temperature.scenario,
-			appState.temperature.months
+			appState.temperature.months,
+			appState.selectedLocation?.lat,
+			appState.selectedLocation?.lon
 		];
 		updateURLFromState();
 	});
-
-	// Share functionality
-	let showCopied = $state(false);
-
-	async function copyShareLink() {
-		await navigator.clipboard.writeText(window.location.href);
-		showCopied = true;
-		setTimeout(() => showCopied = false, 2000);
-	}
 
 	// Month names for subtitle
 	const monthNames = [
@@ -54,22 +52,21 @@
 	];
 
 	const scenarioLabels: Record<string, string> = {
-		ssp126: 'SSP1-2.6',
-		ssp370: 'SSP3-7.0',
-		ssp585: 'SSP5-8.5'
+		ssp126: 'Low emissions',
+		ssp585: 'High emissions'
 	};
 
-	// Generate dynamic subtitle with current selection
-	const querySubtitle = $derived(() => {
-		const queryText = `Days with max temp above ${appState.temperature.threshold}\u00B0C`;
-
+	// Shared title above both maps
+	const mapsTitle = $derived(() => {
 		const startMonth = monthNames[appState.temperature.months[0] - 1];
 		const endMonth = monthNames[appState.temperature.months[1] - 1];
-		const monthRange = startMonth === endMonth ? startMonth : `${startMonth} - ${endMonth}`;
+		const monthRange = startMonth === endMonth ? startMonth : `${startMonth} to ${endMonth}`;
 
-		const scenario = scenarioLabels[appState.temperature.scenario] || appState.temperature.scenario;
+		return `Number of days with maximum temperature above ${appState.temperature.threshold}\u00B0C \u2014 ${monthRange}`;
+	});
 
-		return `${queryText} | ${scenario} ${appState.temperature.years} | ${monthRange}`;
+	const yearsLabel = $derived(() => {
+		return appState.temperature.years === '2036-2065' ? 'Around 2050' : 'Around 2080';
 	});
 </script>
 
@@ -90,33 +87,14 @@
 	{/if}
 
 	<div class="maps-section">
-		<div class="maps-header">
-			<h2 class="maps-main-title">Climate Comparison</h2>
-			<p class="maps-subtitle">{querySubtitle()}</p>
-			<button class="share-btn" onclick={copyShareLink}>
-				{#if showCopied}
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-						<polyline points="20 6 9 17 4 12"/>
-					</svg>
-					Link copied!
-				{:else}
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-						<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-						<polyline points="16 6 12 2 8 6"/>
-						<line x1="12" y1="2" x2="12" y2="15"/>
-					</svg>
-					Share this view
-				{/if}
-			</button>
-		</div>
-
+		<h2 class="maps-title">{mapsTitle()}</h2>
 		<div class="maps-container">
 			<div class="map-wrapper map-left">
 				<p class="map-title">Historical (1981-2010)</p>
 				<Map mapId="map_left" period="Historic" showLegend={true} />
 			</div>
 			<div class="map-wrapper map-right">
-				<p class="map-title">{scenarioLabels[appState.temperature.scenario] || ''} ({appState.temperature.years})</p>
+				<p class="map-title">{yearsLabel()} ({(scenarioLabels[appState.temperature.scenario] || '').toLowerCase()})</p>
 				<Map mapId="map_right" period="Projection" showLegend={false} />
 			</div>
 		</div>
@@ -184,55 +162,19 @@
 
 	.maps-section {
 		margin: 2rem 0;
-	}
-
-	.maps-header {
-		text-align: center;
-		margin-bottom: 1.5rem;
-		padding: 1.5rem;
 		background: white;
 		border-radius: 10px;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 		border: 1px solid #e9ecef;
+		padding: 1.5rem;
 	}
 
-	.maps-main-title {
-		font-size: 1.375rem;
-		font-weight: 700;
+	.maps-title {
+		text-align: center;
+		font-size: 1.125rem;
+		font-weight: 600;
 		color: #1a2332;
-		margin: 0 0 0.25rem 0;
-		line-height: 1.3;
-	}
-
-	.maps-subtitle {
-		font-size: 0.8125rem;
-		color: #6c757d;
-		font-weight: 400;
-		margin: 0;
-	}
-
-	.share-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.375rem;
-		margin-top: 0.75rem;
-		padding: 0.375rem 0.75rem;
-		background: #0A565E;
-		border: none;
-		border-radius: 6px;
-		color: white;
-		font-size: 0.75rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.share-btn:hover {
-		background: #084850;
-	}
-
-	.share-btn svg {
-		flex-shrink: 0;
+		margin: 0 0 1rem 0;
 	}
 
 	.maps-container {
@@ -243,9 +185,9 @@
 	.map-wrapper {
 		position: relative;
 		flex: 1;
-		background: white;
+		background: #fafbfc;
 		border-radius: 8px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		border: 1px solid #e9ecef;
 		overflow: hidden;
 		padding: 1rem;
 	}
@@ -280,18 +222,9 @@
 			margin: 1rem 0;
 		}
 
-		.maps-header {
-			padding: 1rem;
-			margin-bottom: 1rem;
-		}
-
-		.maps-main-title {
-			font-size: 1.125rem;
-		}
-
-		.maps-subtitle {
-			font-size: 0.75rem;
-			line-height: 1.4;
+		.maps-title {
+			font-size: 0.9375rem;
+			margin-bottom: 0.75rem;
 		}
 
 		.maps-container {
@@ -317,15 +250,6 @@
 			margin-left: 8px;
 			margin-right: 8px;
 			padding: 8px 0;
-		}
-
-		.maps-header {
-			padding: 0.75rem;
-			border-radius: 8px;
-		}
-
-		.maps-main-title {
-			font-size: 1rem;
 		}
 
 		.map-wrapper {

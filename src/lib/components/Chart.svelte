@@ -77,21 +77,21 @@
 	const colors = {
 		historical: '#64748b',   // Slate gray for historical baseline
 		ssp126: '#f59e0b',       // Amber for low emissions
-		ssp370: '#ea580c',       // Orange for medium emissions
 		ssp585: '#b91c1c'        // Deep red for high emissions
 	};
 
 	const legendLabels = {
 		historical: 'Historical (1981-2010)',
-		ssp126: 'SSP1-2.6',
-		ssp370: 'SSP3-7.0',
-		ssp585: 'SSP5-8.5'
+		ssp126: 'Low emissions',
+		ssp585: 'High emissions'
 	};
 
 	const monthNames = [
 		'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 	];
+
+	const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 	onMount(() => {
 		margin = getResponsiveMargin();
@@ -170,11 +170,10 @@
 			.attr('stroke', '#e2e8f0')
 			.attr('stroke-width', 2);
 
-		const iconColors = [colors.historical, colors.ssp126, colors.ssp370, colors.ssp585];
+		const iconColors = [colors.historical, colors.ssp126, colors.ssp585];
 		const lineData = [
 			[{ x: -25, y: 8 }, { x: -10, y: 5 }, { x: 5, y: 12 }, { x: 20, y: 2 }],
-			[{ x: -25, y: 12 }, { x: -10, y: 8 }, { x: 5, y: 15 }, { x: 20, y: 6 }],
-			[{ x: -25, y: 16 }, { x: -10, y: 12 }, { x: 5, y: 18 }, { x: 20, y: 10 }],
+			[{ x: -25, y: 14 }, { x: -10, y: 10 }, { x: 5, y: 16 }, { x: 20, y: 8 }],
 			[{ x: -25, y: 20 }, { x: -10, y: 16 }, { x: 5, y: 22 }, { x: 20, y: 14 }]
 		];
 
@@ -222,31 +221,31 @@
 		const threshold = appState.temperature.threshold;
 		const selectedPeriod = appState.temperature.years;
 
-		// Get data for all 4 series: historical + 3 SSPs
+		// Get data for all series: historical + low & high emissions
 		const historicalData = getLocationData('historical', '1981-2010', threshold, lat, lon);
 		const ssp126Data = getLocationData('ssp126', selectedPeriod, threshold, lat, lon);
-		const ssp370Data = getLocationData('ssp370', selectedPeriod, threshold, lat, lon);
 		const ssp585Data = getLocationData('ssp585', selectedPeriod, threshold, lat, lon);
 
 		const historicalArr = historicalData ? monthlyToArray(historicalData) : null;
 		const ssp126Arr = ssp126Data ? monthlyToArray(ssp126Data) : null;
-		const ssp370Arr = ssp370Data ? monthlyToArray(ssp370Data) : null;
 		const ssp585Arr = ssp585Data ? monthlyToArray(ssp585Data) : null;
 
 		// Check if we have any data
-		if (!historicalArr && !ssp126Arr && !ssp370Arr && !ssp585Arr) {
+		if (!historicalArr && !ssp126Arr && !ssp585Arr) {
 			renderNoData();
 			return;
 		}
 
-		// Build chart data
+		// Build chart data — convert days to percentage of month
+		const toPercent = (val: number | null, monthIndex: number) =>
+			val !== null ? (val / daysInMonth[monthIndex]) * 100 : null;
+
 		const chartData = monthNames.map((month, i) => ({
 			month: i + 1,
 			monthName: month,
-			historical: historicalArr ? historicalArr[i] : null,
-			ssp126: ssp126Arr ? ssp126Arr[i] : null,
-			ssp370: ssp370Arr ? ssp370Arr[i] : null,
-			ssp585: ssp585Arr ? ssp585Arr[i] : null
+			historical: toPercent(historicalArr ? historicalArr[i] : null, i),
+			ssp126: toPercent(ssp126Arr ? ssp126Arr[i] : null, i),
+			ssp585: toPercent(ssp585Arr ? ssp585Arr[i] : null, i)
 		}));
 
 		// Scales
@@ -257,11 +256,11 @@
 			.padding(0.5);
 
 		const allValues = chartData.flatMap(d =>
-			[d.historical, d.ssp126, d.ssp370, d.ssp585].filter((v): v is number => v !== null)
+			[d.historical, d.ssp126, d.ssp585].filter((v): v is number => v !== null)
 		);
 
-		const yMin = Math.max(0, (d3.min(allValues) || 0) - 1);
-		const yMax = (d3.max(allValues) || 31) + 1;
+		const yMin = 0;
+		const yMax = Math.min(100, (d3.max(allValues) || 100) + 5);
 
 		const yScale = d3
 			.scaleLinear()
@@ -332,10 +331,10 @@
 			.style('font-size', sizes.yAxisLabelSize)
 			.style('fill', '#374151')
 			.style('font-weight', '500')
-			.text(`Days above ${threshold}°C`);
+			.text(`% of days above ${threshold}°C`);
 
 		// Line generators
-		const lineKeys = ['historical', 'ssp126', 'ssp370', 'ssp585'] as const;
+		const lineKeys = ['historical', 'ssp126', 'ssp585'] as const;
 
 		const lineGenerators: Record<string, d3.Line<any>> = {};
 		for (const key of lineKeys) {
@@ -351,14 +350,12 @@
 		const dashPatterns: Record<string, string> = {
 			historical: '',          // solid
 			ssp126: '8,4',           // dashed
-			ssp370: '',              // solid
 			ssp585: '3,3'            // dotted
 		};
 
 		const lineWidths: Record<string, number> = {
 			historical: 3,
 			ssp126: 2.5,
-			ssp370: 2.5,
 			ssp585: 2.5
 		};
 
@@ -484,7 +481,7 @@
 							<div style="display: flex; align-items: center; gap: 8px;">
 								<span style="width: 10px; height: 10px; border-radius: 50%; background: ${colors[key]};"></span>
 								<span style="color: #6b7280; flex: 1;">${legendLabels[key]}</span>
-								<span style="font-weight: 600;">${(closest.data[key] as number).toFixed(1)} days</span>
+								<span style="font-weight: 600;">${Math.round(closest.data[key] as number)}%</span>
 							</div>
 						`).join('');
 
@@ -542,7 +539,7 @@
 			.style('font-size', sizes.titleFontSize)
 			.style('font-weight', '600')
 			.style('fill', '#111827')
-			.text(`Days above ${threshold}°C per month`);
+			.text(`% of days with a maximum temperature above ${threshold}°C per month`);
 
 		const locationText = `${Math.abs(lat).toFixed(2)}\u00B0${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}\u00B0${lon >= 0 ? 'E' : 'W'}`;
 
@@ -560,7 +557,6 @@
 		const legendData = [
 			{ key: 'historical', label: legendLabels.historical },
 			{ key: 'ssp126', label: legendLabels.ssp126 },
-			{ key: 'ssp370', label: legendLabels.ssp370 },
 			{ key: 'ssp585', label: legendLabels.ssp585 }
 		];
 

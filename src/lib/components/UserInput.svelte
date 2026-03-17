@@ -73,7 +73,6 @@
 
 	const scenarioOptions = [
 		{ value: 'ssp126' as const, label: 'SSP1-2.6', description: 'Low emissions' },
-		{ value: 'ssp370' as const, label: 'SSP3-7.0', description: 'Medium emissions' },
 		{ value: 'ssp585' as const, label: 'SSP5-8.5', description: 'High emissions' }
 	];
 
@@ -91,6 +90,15 @@
 	const currentScenarioLabel = $derived(
 		scenarioOptions.find(o => o.value === appState.temperature.scenario)?.description || appState.temperature.scenario
 	);
+
+	// Share functionality
+	let showCopied = $state(false);
+
+	async function copyShareLink() {
+		await navigator.clipboard.writeText(window.location.href);
+		showCopied = true;
+		setTimeout(() => showCopied = false, 2000);
+	}
 
 	// Close dropdowns when clicking outside
 	$effect(() => {
@@ -112,14 +120,31 @@
 <div class="user-input-container">
 	<!-- Header Section -->
 	<div class="section-header">
-		<h2 class="main-question">How often do maximum temperature thresholds occur?</h2>
-		<button class="reset-btn" onclick={() => resetToDefaults()}>
-			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-				<path d="M3 3v5h5"/>
-			</svg>
-			Reset to defaults
-		</button>
+		<h2 class="main-question">How many hot days can we expect?</h2>
+		<div class="header-actions">
+			<button class="reset-btn" onclick={() => resetToDefaults()}>
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+					<path d="M3 3v5h5"/>
+				</svg>
+				Reset to defaults
+			</button>
+			<button class="share-btn" onclick={copyShareLink}>
+				{#if showCopied}
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<polyline points="20 6 9 17 4 12"/>
+					</svg>
+					Link copied!
+				{:else}
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+						<polyline points="16 6 12 2 8 6"/>
+						<line x1="12" y1="2" x2="12" y2="15"/>
+					</svg>
+					Share this view
+				{/if}
+			</button>
+		</div>
 	</div>
 
 	<!-- Sections 1 & 2: Side by side -->
@@ -779,12 +804,20 @@
 		font-size: 0.75rem;
 	}
 
-	/* Reset Button */
-	.reset-btn {
+	/* Header Actions */
+	.header-actions {
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+	}
+
+	/* Header Action Buttons */
+	.reset-btn,
+	.share-btn {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.375rem;
-		margin-top: 0.75rem;
 		padding: 0.375rem 0.75rem;
 		background: transparent;
 		border: 1px solid #D6DEE8;
@@ -796,13 +829,15 @@
 		transition: all 0.2s ease;
 	}
 
-	.reset-btn:hover {
+	.reset-btn:hover,
+	.share-btn:hover {
 		background: #f8f9fa;
 		border-color: #0A565E;
 		color: #0A565E;
 	}
 
-	.reset-btn svg {
+	.reset-btn svg,
+	.share-btn svg {
 		flex-shrink: 0;
 	}
 

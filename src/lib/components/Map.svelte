@@ -56,9 +56,8 @@
 	let legendMax = $state(100);
 
 	const scenarioLabels: Record<string, string> = {
-		ssp126: 'SSP1-2.6',
-		ssp370: 'SSP3-7.0',
-		ssp585: 'SSP5-8.5'
+		ssp126: 'Low emissions',
+		ssp585: 'High emissions'
 	};
 
 	function getColor(value: number, minVal: number, maxVal: number): string {
@@ -226,25 +225,38 @@
 		const futureData = getLocationData(appState.temperature.scenario, appState.temperature.years, threshold, lat, lon);
 
 		if (!histData && !futureData) {
-			return `<b>${lat.toFixed(2)}, ${lon.toFixed(2)}</b><br><b>No data available</b>`;
+			return `<div style="font-size:12px;line-height:1.6">
+				<div style="color:#6b7280;font-size:11px">${lat.toFixed(2)}°, ${lon.toFixed(2)}°</div>
+				<div>No data available</div>
+			</div>`;
 		}
 
 		const histVal = histData ? Math.round(sumMonthRange(histData, monthStart, monthEnd)) : null;
 		const futVal = futureData ? Math.round(sumMonthRange(futureData, monthStart, monthEnd)) : null;
 
 		const scenarioLabel = scenarioLabels[appState.temperature.scenario] || appState.temperature.scenario;
+		const periodLabel = appState.temperature.years === '2036-2065' ? 'Around 2050' : 'Around 2080';
 
-		let diff = '';
+		let changeHtml = '';
 		if (histVal !== null && futVal !== null) {
 			const delta = futVal - histVal;
 			const sign = delta > 0 ? '+' : '';
-			diff = `<br><b>Change:</b> <span style="color:${delta > 0 ? '#dc2626' : delta < 0 ? '#16a34a' : '#666'}">${sign}${delta} days</span>`;
+			const color = delta > 0 ? '#dc2626' : delta < 0 ? '#16a34a' : '#6b7280';
+			changeHtml = `<div style="border-top:1px solid #e5e7eb;margin-top:6px;padding-top:6px;color:${color};font-weight:600">${sign}${delta} days</div>`;
 		}
 
-		return `<b>${lat.toFixed(2)}, ${lon.toFixed(2)}</b><br>` +
-			`<b>Historical:</b> ${histVal !== null ? histVal + ' days' : 'N/A'}<br>` +
-			`<b>${scenarioLabel} ${appState.temperature.years}:</b> ${futVal !== null ? futVal + ' days' : 'N/A'}` +
-			diff;
+		return `<div style="font-size:12px;line-height:1.6">
+			<div style="color:#6b7280;font-size:11px;margin-bottom:4px">${lat.toFixed(2)}°, ${lon.toFixed(2)}°</div>
+			<div style="display:flex;justify-content:space-between;gap:12px">
+				<span style="color:#6b7280">Historical</span>
+				<span style="font-weight:600">${histVal !== null ? histVal + ' days' : 'N/A'}</span>
+			</div>
+			<div style="display:flex;justify-content:space-between;gap:12px">
+				<span style="color:#6b7280">${periodLabel} (${scenarioLabel.toLowerCase()})</span>
+				<span style="font-weight:600">${futVal !== null ? futVal + ' days' : 'N/A'}</span>
+			</div>
+			${changeHtml}
+		</div>`;
 	}
 
 	/**

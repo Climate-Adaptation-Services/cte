@@ -36,9 +36,9 @@ interface AppState {
 export const appState = $state<AppState>({
   activeTab: "temperature",
   temperature: {
-    threshold: 25,
+    threshold: 35,
     years: "2036-2065",
-    scenario: "ssp370",
+    scenario: "ssp585",
     months: [1, 12],
   },
   mapView: {
@@ -76,7 +76,7 @@ export function setDataLoaded(loaded: boolean) {
 
 // Default values for reset
 const defaultTemperature: TemperatureState = {
-  threshold: 25,
+  threshold: 35,
   years: "2036-2065",
   scenario: "ssp370",
   months: [1, 12],
@@ -120,6 +120,23 @@ export function getStateFromURL(): Partial<TemperatureState> | null {
   return Object.keys(state).length > 0 ? state : null;
 }
 
+export function getLocationFromURL(): Location | null {
+  if (typeof window === 'undefined') return null;
+
+  const params = new URLSearchParams(window.location.search);
+  const lat = params.get('lat');
+  const lon = params.get('lon');
+
+  if (lat && lon) {
+    const latNum = parseFloat(lat);
+    const lonNum = parseFloat(lon);
+    if (!isNaN(latNum) && !isNaN(lonNum)) {
+      return { lat: latNum, lon: lonNum };
+    }
+  }
+  return null;
+}
+
 export function updateURLFromState() {
   if (typeof window === 'undefined') return;
 
@@ -129,6 +146,11 @@ export function updateURLFromState() {
   params.set('years', appState.temperature.years);
   params.set('scenario', appState.temperature.scenario);
   params.set('months', `${appState.temperature.months[0]}-${appState.temperature.months[1]}`);
+
+  if (appState.selectedLocation) {
+    params.set('lat', appState.selectedLocation.lat.toFixed(4));
+    params.set('lon', appState.selectedLocation.lon.toFixed(4));
+  }
 
   const newURL = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState({}, '', newURL);
