@@ -9,7 +9,7 @@
 
 	// Tooltip content
 	const tooltips = {
-		temperature: 'Set the maximum temperature threshold. The map will show the number of days per year where the maximum daily temperature exceeds this value.',
+		temperature: 'Set the maximum temperature threshold. The map will show the number of days per year where maximum daily temperatures exceed this value.',
 		period: 'Climate projections are grouped into 30-year periods. Earlier periods have less uncertainty, later periods show more pronounced climate change effects.',
 		scenario: 'Shared Socioeconomic Pathways (SSPs) represent different emission scenarios. SSP1-2.6 is low emissions, SSP3-7.0 is medium, and SSP5-8.5 is high emissions.',
 		months: 'Select a range of months to focus your analysis on specific seasons or time periods within the year.'
@@ -118,9 +118,15 @@
 </script>
 
 <div class="user-input-container">
-	<!-- Header Section -->
-	<div class="section-header">
+	<!-- Logo + Header Section -->
+	<div class="logo-header">
+		<div class="logo-bar">
+			<a href="https://safe4allafrica.eu/" target="_blank" rel="noopener noreferrer"><img src="/logos/Logo_Safe4all_vertical_transparent.png" alt="SAFE4ALL Africa" class="logo" /></a>
+			<a href="https://climateadaptationservices.com/en/" target="_blank" rel="noopener noreferrer"><img src="/logos/cas-logo.svg" alt="Climate Adaptation Services" class="logo logo-cas" /></a>
+		</div>
 		<h2 class="main-question">How many hot days can we expect?</h2>
+	</div>
+	<div class="section-header">
 		<div class="header-actions">
 			<button class="reset-btn" onclick={() => resetToDefaults()}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -161,7 +167,7 @@
 							<div class="tooltip">{tooltips.temperature}</div>
 						{/if}
 					</div>
-					<p class="section-description">Number of days per year with maximum temperature above</p>
+					<p class="section-description">Number of days per year with maximum temperatures above</p>
 				</div>
 			</div>
 
@@ -333,19 +339,45 @@
 	}
 
 	/* Header Section */
-	.section-header {
+	.logo-header {
+		display: flex;
+		align-items: center;
+		position: relative;
 		margin-bottom: 1.25rem;
-		text-align: center;
 		padding-bottom: 1rem;
 		border-bottom: 2px solid #f0f4f8;
+	}
+
+	.logo-bar {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		position: absolute;
+		right: 0;
+	}
+
+	.logo {
+		height: 45px;
+		width: auto;
+		object-fit: contain;
+	}
+
+	.logo-cas {
+		height: 60px;
 	}
 
 	.main-question {
 		font-size: 1.375rem;
 		font-weight: 700;
-		color: #1a2332;
-		margin: 0 0 0.25rem 0;
+		color: #0A565E;
+		margin: 0;
 		line-height: 1.3;
+		flex: 1;
+		text-align: center;
+	}
+
+	.section-header {
+		margin-bottom: 1.25rem;
 	}
 
 	.subtitle {
@@ -483,12 +515,13 @@
 
 	label {
 		font-size: 0.75rem;
-		color: #495057;
+		color: #2c3e50;
 		font-weight: 600;
 		margin: 0;
 		letter-spacing: 0.01em;
 		display: flex;
 		align-items: flex-end;
+		gap: 0.625rem;
 	}
 
 	input[type='number'] {
@@ -791,7 +824,7 @@
 	.month-label {
 		position: absolute;
 		transform: translateX(-50%);
-		color: #9AA6B2;
+		color: #6c757d;
 		white-space: nowrap;
 		font-weight: 400;
 		letter-spacing: 0.02em;
@@ -845,7 +878,7 @@
 	.label-with-tooltip {
 		display: flex;
 		align-items: center;
-		gap: 0.375rem;
+		gap: 0.625rem;
 		position: relative;
 	}
 
@@ -853,7 +886,7 @@
 		padding: 0;
 		background: transparent;
 		border: none;
-		color: #9AA6B2;
+		color: #6c757d;
 		cursor: pointer;
 		transition: color 0.2s ease;
 		font-size: 0.875rem;

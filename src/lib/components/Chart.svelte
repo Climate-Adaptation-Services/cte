@@ -144,7 +144,7 @@
 			.attr('text-anchor', 'middle')
 			.style('font-size', sizes.titleFontSize)
 			.style('font-weight', '600')
-			.style('fill', '#111827')
+			.style('fill', '#0A565E')
 			.text('Temperature Seasonality');
 
 		svg
@@ -154,7 +154,7 @@
 			.attr('text-anchor', 'middle')
 			.style('font-size', sizes.subtitleFontSize)
 			.style('font-weight', '400')
-			.style('fill', '#6b7280')
+			.style('fill', '#6c757d')
 			.text('Select a location on the map to view data');
 
 		const iconGroup = svg
@@ -209,7 +209,7 @@
 			.attr('y', height / 2 + 50)
 			.attr('text-anchor', 'middle')
 			.style('font-size', '14px')
-			.style('fill', '#6b7280')
+			.style('fill', '#6c757d')
 			.text('Click on the map to select a location');
 	}
 
@@ -303,7 +303,7 @@
 		xAxis.selectAll('text')
 			.attr('dy', '1em')
 			.style('font-size', sizes.axisFontSize)
-			.style('fill', '#6b7280');
+			.style('fill', '#6c757d');
 
 		// Y axis
 		const yAxis = svg!
@@ -318,7 +318,7 @@
 		yAxis.select('.domain').attr('stroke', '#d1d5db');
 		yAxis.selectAll('text')
 			.style('font-size', sizes.axisFontSize)
-			.style('fill', '#6b7280');
+			.style('fill', '#6c757d');
 		yAxis.selectAll('line').attr('stroke', '#d1d5db');
 
 		// Y axis label
@@ -329,7 +329,7 @@
 			.attr('x', 0 - height / 2)
 			.style('text-anchor', 'middle')
 			.style('font-size', sizes.yAxisLabelSize)
-			.style('fill', '#374151')
+			.style('fill', '#2c3e50')
 			.style('font-weight', '500')
 			.text(`% of days above ${threshold}°C`);
 
@@ -480,7 +480,7 @@
 						.map(key => `
 							<div style="display: flex; align-items: center; gap: 8px;">
 								<span style="width: 10px; height: 10px; border-radius: 50%; background: ${colors[key]};"></span>
-								<span style="color: #6b7280; flex: 1;">${legendLabels[key]}</span>
+								<span style="color: #6c757d; flex: 1;">${legendLabels[key]}</span>
 								<span style="font-weight: 600;">${Math.round(closest.data[key] as number)}%</span>
 							</div>
 						`).join('');
@@ -538,8 +538,8 @@
 			.attr('text-anchor', 'middle')
 			.style('font-size', sizes.titleFontSize)
 			.style('font-weight', '600')
-			.style('fill', '#111827')
-			.text(`% of days with a maximum temperature above ${threshold}°C per month`);
+			.style('fill', '#0A565E')
+			.text(`% of days with maximum temperatures above ${threshold}°C per month`);
 
 		const locationText = `${Math.abs(lat).toFixed(2)}\u00B0${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}\u00B0${lon >= 0 ? 'E' : 'W'}`;
 
@@ -550,7 +550,7 @@
 			.attr('text-anchor', 'middle')
 			.style('font-size', sizes.subtitleFontSize)
 			.style('font-weight', '400')
-			.style('fill', '#6b7280')
+			.style('fill', '#6c757d')
 			.text(`Location: ${locationText} | Period: ${appState.temperature.years}`);
 
 		// Legend
@@ -596,7 +596,7 @@
 					.attr('y', 0)
 					.attr('dy', '0.35em')
 					.style('font-size', '10px')
-					.style('fill', '#4b5563')
+					.style('fill', '#2c3e50')
 					.style('font-weight', '500')
 					.text(item.label.replace('Historical (1981-2010)', 'Historic'));
 			});
@@ -639,7 +639,7 @@
 					.attr('y', 6)
 					.attr('dy', '0.35em')
 					.style('font-size', '11px')
-					.style('fill', '#4b5563')
+					.style('fill', '#2c3e50')
 					.style('font-weight', '500')
 					.text(item.label);
 			});
@@ -658,7 +658,7 @@
 			.attr('text-anchor', 'middle')
 			.style('font-size', sizes.titleFontSize)
 			.style('font-weight', '600')
-			.style('fill', '#111827')
+			.style('fill', '#0A565E')
 			.text('No data available');
 
 		svg
@@ -667,7 +667,7 @@
 			.attr('y', height / 2)
 			.attr('text-anchor', 'middle')
 			.style('font-size', '14px')
-			.style('fill', '#6b7280')
+			.style('fill', '#6c757d')
 			.text('No climate data found for this location. Try selecting a different grid cell.');
 	}
 

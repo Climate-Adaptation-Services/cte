@@ -62,7 +62,7 @@
 		const endMonth = monthNames[appState.temperature.months[1] - 1];
 		const monthRange = startMonth === endMonth ? startMonth : `${startMonth} to ${endMonth}`;
 
-		return `Number of days with maximum temperature above ${appState.temperature.threshold}\u00B0C \u2014 ${monthRange}`;
+		return `Number of days with maximum temperatures above ${appState.temperature.threshold}\u00B0C \u2014 ${monthRange}`;
 	});
 
 	const yearsLabel = $derived(() => {
@@ -101,6 +101,38 @@
 	</div>
 
 	<Chart />
+
+	<details class="about-data">
+		<summary class="about-data-toggle">About this tool & data</summary>
+		<div class="about-data-content">
+			<div class="about-grid">
+				<div class="about-item">
+					<h4>Data source</h4>
+					<p>Climate projections are based on CMIP6 global climate models, processed as part of the <a href="https://safe4allafrica.eu/" target="_blank" rel="noopener noreferrer">SAFE4ALL Africa</a> project. The data represents the median across an ensemble of climate models to provide a robust central estimate.</p>
+				</div>
+				<div class="about-item">
+					<h4>Scenarios</h4>
+					<p><strong>Low emissions (SSP1-2.6)</strong> assumes rapid global action to limit warming, reaching net-zero emissions around 2070. <strong>High emissions (SSP5-8.5)</strong> represents continued growth in fossil fuel use with limited climate policy.</p>
+				</div>
+				<div class="about-item">
+					<h4>Time periods</h4>
+					<p><strong>Historical (1981–2010)</strong> serves as the baseline reference period. <strong>Around 2050 (2036–2065)</strong> and <strong>Around 2080 (2066–2095)</strong> represent near-term and long-term future projections.</p>
+				</div>
+				<div class="about-item">
+					<h4>Spatial resolution</h4>
+					<p>The data is provided on a regular grid covering Kenya. Each grid cell represents approximately [X] km × [X] km. Values shown are the number of days per month where the daily maximum temperature exceeds the selected threshold.</p>
+				</div>
+				<div class="about-item">
+					<h4>Methodology</h4>
+					<p>Threshold exceedance days are calculated from bias-corrected daily maximum temperature output. Monthly values represent the average number of days exceeding the threshold over the 30-year period. The median across all ensemble members is used to reduce individual model uncertainty.</p>
+				</div>
+				<div class="about-item">
+					<h4>Limitations</h4>
+					<p>Climate projections are not predictions but plausible futures based on emission scenarios. Local conditions such as urban heat effects or elevation differences within a grid cell are not fully captured. Results should be interpreted as indicative of trends rather than exact values for specific locations.</p>
+				</div>
+			</div>
+		</div>
+	</details>
 </div>
 
 <style>
@@ -111,7 +143,7 @@
 		background: #F4FBF4;
 	}
 
-	.container {
+.container {
 		margin-left: 30px;
 		margin-right: 30px;
 		padding: 20px 0;
@@ -173,7 +205,7 @@
 		text-align: center;
 		font-size: 1.125rem;
 		font-weight: 600;
-		color: #1a2332;
+		color: #0A565E;
 		margin: 0 0 1rem 0;
 	}
 
@@ -210,6 +242,74 @@
 		border-bottom: 1px solid #f0f4f8;
 	}
 
+	.about-data {
+		margin: 2rem 0;
+		background: white;
+		border-radius: 10px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		border: 1px solid #e9ecef;
+	}
+
+	.about-data-toggle {
+		padding: 1.25rem 1.5rem;
+		font-size: 1rem;
+		font-weight: 600;
+		color: #0A565E;
+		cursor: pointer;
+		list-style: none;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.about-data-toggle::-webkit-details-marker {
+		display: none;
+	}
+
+	.about-data-toggle::before {
+		content: '▶';
+		font-size: 0.625rem;
+		transition: transform 0.2s ease;
+		color: #6c757d;
+	}
+
+	.about-data[open] .about-data-toggle::before {
+		transform: rotate(90deg);
+	}
+
+	.about-data-content {
+		padding: 0 1.5rem 1.5rem;
+	}
+
+	.about-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.5rem;
+	}
+
+	.about-item h4 {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #0A565E;
+		margin: 0 0 0.375rem 0;
+	}
+
+	.about-item a {
+		color: #0A565E;
+		text-decoration: underline;
+	}
+
+	.about-item a:hover {
+		color: #084850;
+	}
+
+	.about-item p {
+		font-size: 0.8125rem;
+		color: #2c3e50;
+		line-height: 1.6;
+		margin: 0;
+	}
+
 	/* Responsive design */
 	@media (max-width: 768px) {
 		.container {
@@ -242,6 +342,10 @@
 			font-size: 0.875rem;
 			margin-bottom: 0.5rem;
 			padding-bottom: 0.375rem;
+		}
+
+		.about-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 

@@ -226,7 +226,7 @@
 
 		if (!histData && !futureData) {
 			return `<div style="font-size:12px;line-height:1.6">
-				<div style="color:#6b7280;font-size:11px">${lat.toFixed(2)}°, ${lon.toFixed(2)}°</div>
+				<div style="color:#6c757d;font-size:11px">${lat.toFixed(2)}°, ${lon.toFixed(2)}°</div>
 				<div>No data available</div>
 			</div>`;
 		}
@@ -246,13 +246,13 @@
 		}
 
 		return `<div style="font-size:12px;line-height:1.6">
-			<div style="color:#6b7280;font-size:11px;margin-bottom:4px">${lat.toFixed(2)}°, ${lon.toFixed(2)}°</div>
+			<div style="color:#6c757d;font-size:11px;margin-bottom:4px">${lat.toFixed(2)}°, ${lon.toFixed(2)}°</div>
 			<div style="display:flex;justify-content:space-between;gap:12px">
-				<span style="color:#6b7280">Historical</span>
+				<span style="color:#6c757d">Historical</span>
 				<span style="font-weight:600">${histVal !== null ? histVal + ' days' : 'N/A'}</span>
 			</div>
 			<div style="display:flex;justify-content:space-between;gap:12px">
-				<span style="color:#6b7280">${periodLabel} (${scenarioLabel.toLowerCase()})</span>
+				<span style="color:#6c757d">${periodLabel} (${scenarioLabel.toLowerCase()})</span>
 				<span style="font-weight:600">${futVal !== null ? futVal + ' days' : 'N/A'}</span>
 			</div>
 			${changeHtml}
@@ -436,7 +436,7 @@
 		justify-content: space-between;
 		margin-top: 4px;
 		font-size: 11px;
-		color: #555;
+		color: #6c757d;
 	}
 
 	/* Touch hint overlay */
