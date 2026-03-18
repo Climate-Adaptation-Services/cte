@@ -123,6 +123,7 @@
 		<div class="logo-bar">
 			<a href="https://safe4allafrica.eu/" target="_blank" rel="noopener noreferrer"><img src="/logos/Logo_Safe4all_vertical_transparent.png" alt="SAFE4ALL Africa" class="logo" /></a>
 			<a href="https://climateadaptationservices.com/en/" target="_blank" rel="noopener noreferrer"><img src="/logos/cas-logo.svg" alt="Climate Adaptation Services" class="logo logo-cas" /></a>
+			<a href="https://www.pik-potsdam.de/en" target="_blank" rel="noopener noreferrer"><img src="/logos/A_RGB.png" alt="PIK" class="logo logo-a" /></a>
 		</div>
 		<h2 class="main-question">How many hot days can we expect?</h2>
 	</div>
@@ -351,7 +352,7 @@
 	.logo-bar {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: 0.25rem;
 		position: absolute;
 		right: 0;
 	}
@@ -364,6 +365,10 @@
 
 	.logo-cas {
 		height: 60px;
+	}
+
+	.logo-a {
+		height: 35px;
 	}
 
 	.main-question {

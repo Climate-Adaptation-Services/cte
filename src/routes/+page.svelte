@@ -108,27 +108,30 @@
 			<div class="about-grid">
 				<div class="about-item">
 					<h4>Data source</h4>
-					<p>Climate projections are based on CMIP6 global climate models, processed as part of the <a href="https://safe4allafrica.eu/" target="_blank" rel="noopener noreferrer">SAFE4ALL Africa</a> project. The data represents the median across an ensemble of climate models to provide a robust central estimate.</p>
-				</div>
-				<div class="about-item">
-					<h4>Scenarios</h4>
-					<p><strong>Low emissions (SSP1-2.6)</strong> assumes rapid global action to limit warming, reaching net-zero emissions around 2070. <strong>High emissions (SSP5-8.5)</strong> represents continued growth in fossil fuel use with limited climate policy.</p>
-				</div>
-				<div class="about-item">
-					<h4>Time periods</h4>
-					<p><strong>Historical (1981–2010)</strong> serves as the baseline reference period. <strong>Around 2050 (2036–2065)</strong> and <strong>Around 2080 (2066–2095)</strong> represent near-term and long-term future projections.</p>
-				</div>
-				<div class="about-item">
-					<h4>Spatial resolution</h4>
-					<p>The data is provided on a regular grid covering Kenya. Each grid cell represents approximately [X] km × [X] km. Values shown are the number of days per month where the daily maximum temperature exceeds the selected threshold.</p>
+					<p>Climate projections are based on <strong>10 bias-adjusted and statistically downscaled CMIP6 global climate models</strong> provided by phase 3b of the Intersectoral Impact Model Intercomparison Project (see <strong><a href="https://www.isimip.org/" target="_blank" rel="noopener noreferrer">ISIMIP3b</a></strong>). The ensemble includes GFDL-ESM4, IPSL-CM6A-LR, MPI-ESM1-2-HR, MRI-ESM2-0, UKESM1-0-LL, CanESM5, CNRM-CM6-1, CNRM-ESM2-1, EC-Earth3, and MIROC6. Results are based on the ensemble median to provide a robust central estimate. The data were processed as part of the <a href="https://safe4allafrica.eu/" target="_blank" rel="noopener noreferrer">SAFE4ALL Africa</a> project.</p>
 				</div>
 				<div class="about-item">
 					<h4>Methodology</h4>
-					<p>Threshold exceedance days are calculated from bias-corrected daily maximum temperature output. Monthly values represent the average number of days exceeding the threshold over the 30-year period. The median across all ensemble members is used to reduce individual model uncertainty.</p>
+					<p>Threshold exceedance days are calculated from daily maximum temperature data. Values represent the average number (or percentage) of days per month exceeding the selected threshold over each 30-year period. The median across all ensemble members is used to reduce individual model uncertainty.</p>
+				</div>
+				<div class="about-item">
+					<h4>Time periods and spatial resolution</h4>
+					<p>The <strong>historical period (1981–2010)</strong> serves as the baseline reference. The <strong>periods 2036–2065 ("around 2050")</strong> and <strong>2066–2095 ("around 2080")</strong> represent mid-term and long-term future projections. The data are provided at a <strong>spatial resolution of 0.5°</strong> (~50 km × 50 km at the equator).</p>
+				</div>
+				<div class="about-item">
+					<h4>Scenarios</h4>
+					<p><strong>Low emissions (SSP1-2.6)</strong> assumes rapid global action to limit warming, reaching net-zero emissions around 2050. <strong>High emissions (SSP5-8.5)</strong> represents continued growth in fossil fuel use with minimal climate policy.</p>
 				</div>
 				<div class="about-item">
 					<h4>Limitations</h4>
 					<p>Climate projections are not predictions but plausible futures based on emission scenarios. Local conditions such as urban heat effects or elevation differences within a grid cell are not fully captured. Results should be interpreted as indicative of trends rather than exact values for specific locations.</p>
+				</div>
+				<div class="about-item references">
+					<h4>References</h4>
+					<p>Cucchi, M., Weedon, G. P., Amici, A., Bellouin, N., Lange, S., Müller Schmied, H., Hersbach, H., and Buontempo, C.: WFDE5: bias-adjusted ERA5 reanalysis data for impact studies, Earth System Science Data, 12, 2097–2120, <a href="https://doi.org/10.5194/essd-12-2097-2020" target="_blank" rel="noopener noreferrer">https://doi.org/10.5194/essd-12-2097-2020</a>, 2020</p>
+					<p>Frieler, K., Volkholz, J., Lange, S., et al.: Scenario setup and forcing data for impact model evaluation and impact attribution within the third round of the Inter-Sectoral Impact Model Intercomparison Project (ISIMIP3a), Geosci. Model Dev., 17, 1–51, <a href="https://doi.org/10.5194/gmd-17-1-2024" target="_blank" rel="noopener noreferrer">https://doi.org/10.5194/gmd-17-1-2024</a>, 2024.</p>
+					<p>Lange, S.: ISIMIP3BASD v2.5.0, <a href="https://doi.org/10.5281/zenodo.4686991" target="_blank" rel="noopener noreferrer">https://doi.org/10.5281/zenodo.4686991</a>, 2021.</p>
+					<p>Lange, S. and Büchner, M.: ISIMIP3b bias-adjusted atmospheric climate input data (v1.1). ISIMIP Repository. 2021. <a href="https://doi.org/10.48364/ISIMIP.842396.1" target="_blank" rel="noopener noreferrer">https://doi.org/10.48364/ISIMIP.842396.1</a></p>
 				</div>
 			</div>
 		</div>
@@ -282,9 +285,21 @@
 	}
 
 	.about-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1.5rem;
+		columns: 2;
+		column-gap: 1.5rem;
+	}
+
+	.about-item {
+		break-inside: avoid;
+		margin-bottom: 1.25rem;
+	}
+
+	.about-item.references p {
+		font-size: 0.6875rem;
+	}
+
+	.about-item.references p + p {
+		margin-top: 0.5rem;
 	}
 
 	.about-item h4 {
@@ -346,7 +361,7 @@
 		}
 
 		.about-grid {
-			grid-template-columns: 1fr;
+			columns: 1;
 		}
 	}
 
