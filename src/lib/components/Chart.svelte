@@ -582,19 +582,18 @@
 		];
 
 		if (sizes.legendBelow) {
+			const itemSpacing = Math.min(160, width / 3);
+			const totalWidth = legendData.length * itemSpacing;
+			const startX = (width - totalWidth) / 2;
+
 			const legend = svg!
 				.append('g')
 				.attr('class', 'legend')
-				.attr('transform', `translate(0, ${height + 30})`);
-
-			const colWidth = Math.min(160, width / 1.8);
-			const rowHeight = 18;
+				.attr('transform', `translate(${startX}, ${height + 30})`);
 
 			legendData.forEach((item, i) => {
-				const row = i === 0 ? 0 : 1;
-				const col = i === 0 ? 0 : i - 1;
-				const x = col * colWidth;
-				const y = row * rowHeight;
+				const x = i * itemSpacing;
+				const y = 0;
 
 				const legendItem = legend
 					.append('g')
@@ -625,7 +624,7 @@
 			const legend = svg!
 				.append('g')
 				.attr('class', 'legend')
-				.attr('transform', `translate(${width - 180}, 5)`);
+				.attr('transform', `translate(${width - 120}, -45)`);
 
 			legend
 				.append('rect')
