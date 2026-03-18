@@ -203,7 +203,7 @@
 
 	.maps-title {
 		text-align: center;
-		font-size: 1.125rem;
+		font-size: 1.0625rem;
 		font-weight: 600;
 		color: #0A565E;
 		margin: 0 0 1rem 0;
@@ -234,9 +234,9 @@
 
 	.map-title {
 		text-align: center;
-		font-size: 0.9375rem;
-		font-weight: 600;
-		color: #2c3e50;
+		font-size: 0.875rem;
+		font-weight: 400;
+		color: #6c757d;
 		margin: 0 0 0.75rem 0;
 		padding-bottom: 0.5rem;
 		border-bottom: 1px solid #f0f4f8;
@@ -320,10 +320,11 @@
 
 		.maps-section {
 			margin: 1rem 0;
+			padding: 0.75rem;
 		}
 
 		.maps-title {
-			font-size: 0.9375rem;
+			font-size: 0.75rem;
 			margin-bottom: 0.75rem;
 		}
 
@@ -356,9 +357,22 @@
 			padding: 8px 0;
 		}
 
+		.maps-section {
+			padding: 0.5rem;
+		}
+
 		.map-wrapper {
 			border-radius: 6px;
-			padding: 0.5rem;
+			padding: 0.375rem;
+		}
+
+		.about-data-toggle {
+			padding: 1rem;
+			font-size: 0.875rem;
+		}
+
+		.about-data-content {
+			padding: 0 1rem 1rem;
 		}
 	}
 </style>

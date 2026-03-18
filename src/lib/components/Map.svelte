@@ -92,6 +92,7 @@
 			document.head.appendChild(link);
 
 			const isMobile = window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window;
+			const mobileZoom = isMobile ? Math.min(appState.mapView.zoom, 5) : appState.mapView.zoom;
 
 			map = L.map(mapContainer, {
 				zoomControl: true,
@@ -100,7 +101,7 @@
 				dragging: !isMobile
 			}).setView(
 				[appState.mapView.center[0], appState.mapView.center[1]],
-				appState.mapView.zoom
+				mobileZoom
 			);
 
 			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

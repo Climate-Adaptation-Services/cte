@@ -943,6 +943,29 @@
 			margin-bottom: 1rem;
 		}
 
+		.logo-header {
+			flex-direction: column;
+			gap: 0.375rem;
+		}
+
+		.logo-bar {
+			position: static;
+			justify-content: center;
+			gap: 0.5rem;
+		}
+
+		.logo {
+			height: 30px;
+		}
+
+		.logo-cas {
+			height: 48px;
+		}
+
+		.main-question {
+			text-align: center;
+		}
+
 		.section-header {
 			margin-bottom: 1rem;
 			padding-bottom: 0.75rem;
@@ -1045,6 +1068,14 @@
 
 		.main-question {
 			font-size: 1rem;
+		}
+
+		.logo {
+			height: 24px;
+		}
+
+		.logo-cas {
+			height: 34px;
 		}
 
 		.input-section.primary,

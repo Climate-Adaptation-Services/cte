@@ -18,9 +18,9 @@
 	function getResponsiveMargin() {
 		const containerWidth = svgContainer?.clientWidth || 600;
 		if (containerWidth < 480) {
-			return { top: 50, right: 15, bottom: 55, left: 45 };
+			return { top: 60, right: 8, bottom: 55, left: 35 };
 		} else if (containerWidth < 768) {
-			return { top: 60, right: 20, bottom: 60, left: 55 };
+			return { top: 65, right: 12, bottom: 60, left: 45 };
 		}
 		return { top: 70, right: 30, bottom: 50, left: 65 };
 	}
@@ -29,10 +29,10 @@
 		const containerWidth = svgContainer?.clientWidth || 600;
 		if (containerWidth < 480) {
 			return {
-				titleY: -35,
-				subtitleY: -18,
-				titleFontSize: '14px',
-				subtitleFontSize: '11px',
+				titleY: -38,
+				subtitleY: -16,
+				titleFontSize: '12px',
+				subtitleFontSize: '10px',
 				iconRadius: 35,
 				axisFontSize: '9px',
 				yAxisLabelSize: '10px',
@@ -41,8 +41,8 @@
 			};
 		} else if (containerWidth < 768) {
 			return {
-				titleY: -40,
-				subtitleY: -20,
+				titleY: -48,
+				subtitleY: -25,
 				titleFontSize: '15px',
 				subtitleFontSize: '12px',
 				iconRadius: 40,
@@ -53,8 +53,8 @@
 			};
 		}
 		return {
-			titleY: -45,
-			subtitleY: -22,
+			titleY: -50,
+			subtitleY: -28,
 			titleFontSize: '17px',
 			subtitleFontSize: '13px',
 			iconRadius: 45,
@@ -531,15 +531,36 @@
 		// Chart title
 		const centerX = getTitleCenterX();
 
-		svg!
-			.append('text')
-			.attr('x', centerX)
-			.attr('y', sizes.titleY)
-			.attr('text-anchor', 'middle')
-			.style('font-size', sizes.titleFontSize)
-			.style('font-weight', '600')
-			.style('fill', '#0A565E')
-			.text(`% of days with maximum temperatures above ${threshold}°C per month`);
+		if (svgWidth < 500) {
+			svg!
+				.append('text')
+				.attr('x', centerX)
+				.attr('y', sizes.titleY - 10)
+				.attr('text-anchor', 'middle')
+				.style('font-size', sizes.titleFontSize)
+				.style('font-weight', '600')
+				.style('fill', '#0A565E')
+				.text(`% of days with max. temperatures`);
+			svg!
+				.append('text')
+				.attr('x', centerX)
+				.attr('y', sizes.titleY + 6)
+				.attr('text-anchor', 'middle')
+				.style('font-size', sizes.titleFontSize)
+				.style('font-weight', '600')
+				.style('fill', '#0A565E')
+				.text(`above ${threshold}°C per month`);
+		} else {
+			svg!
+				.append('text')
+				.attr('x', centerX)
+				.attr('y', sizes.titleY)
+				.attr('text-anchor', 'middle')
+				.style('font-size', sizes.titleFontSize)
+				.style('font-weight', '600')
+				.style('fill', '#0A565E')
+				.text(`% of days with maximum temperatures above ${threshold}°C per month`);
+		}
 
 		const locationText = `${Math.abs(lat).toFixed(2)}\u00B0${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}\u00B0${lon >= 0 ? 'E' : 'W'}`;
 
@@ -564,15 +585,15 @@
 			const legend = svg!
 				.append('g')
 				.attr('class', 'legend')
-				.attr('transform', `translate(${centerX}, ${height + 30})`);
+				.attr('transform', `translate(0, ${height + 30})`);
 
-			const colWidth = Math.min(100, width / 2.2);
-			const rowHeight = 16;
+			const colWidth = Math.min(160, width / 1.8);
+			const rowHeight = 18;
 
 			legendData.forEach((item, i) => {
-				const col = i % 2;
-				const row = Math.floor(i / 2);
-				const x = (col - 0.5) * colWidth;
+				const row = i === 0 ? 0 : 1;
+				const col = i === 0 ? 0 : i - 1;
+				const x = col * colWidth;
 				const y = row * rowHeight;
 
 				const legendItem = legend
@@ -604,7 +625,7 @@
 			const legend = svg!
 				.append('g')
 				.attr('class', 'legend')
-				.attr('transform', `translate(${width - 140}, 5)`);
+				.attr('transform', `translate(${width - 180}, 5)`);
 
 			legend
 				.append('rect')
@@ -725,7 +746,7 @@
 
 	@media (max-width: 768px) {
 		.chart-container {
-			padding: 16px;
+			padding: 10px;
 			min-height: 350px;
 			border-radius: 10px;
 		}
@@ -739,7 +760,7 @@
 
 	@media (max-width: 480px) {
 		.chart-container {
-			padding: 12px;
+			padding: 6px;
 			min-height: 300px;
 			border-radius: 8px;
 		}
