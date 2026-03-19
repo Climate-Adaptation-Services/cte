@@ -123,17 +123,24 @@
 			});
 
 			if (isMobile) {
+				let touchStartPos: { x: number; y: number } | null = null;
 				mapContainer.addEventListener('touchstart', (e) => {
 					if (e.touches.length === 1) {
-						showTouchHint = true;
-						if (touchHintTimeout) clearTimeout(touchHintTimeout);
-						touchHintTimeout = setTimeout(() => { showTouchHint = false; }, 2000);
+						touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 					}
 				});
 				mapContainer.addEventListener('touchmove', (e) => {
 					if (e.touches.length >= 2) {
 						showTouchHint = false;
 						map!.dragging.enable();
+					} else if (e.touches.length === 1 && touchStartPos) {
+						const dx = Math.abs(e.touches[0].clientX - touchStartPos.x);
+						const dy = Math.abs(e.touches[0].clientY - touchStartPos.y);
+						if (dx > 10 || dy > 10) {
+							showTouchHint = true;
+							if (touchHintTimeout) clearTimeout(touchHintTimeout);
+							touchHintTimeout = setTimeout(() => { showTouchHint = false; }, 2000);
+						}
 					}
 				});
 				mapContainer.addEventListener('touchend', () => {
@@ -189,10 +196,18 @@
 				// Dynamic tooltip: compute content on hover
 				layer.on('mouseover', function (e: any) {
 					const content = getTooltipContent(idx);
-					if (content) {
+					if (content && map) {
+						map.closeTooltip(tooltipLayer);
+						const point = map.latLngToContainerPoint(e.latlng);
+						const mapSize = map.getSize();
+						let dir: string = 'top';
+						if (point.y < 100) dir = 'bottom';
+						else if (point.x < 140) dir = 'right';
+						else if (point.x > mapSize.x - 140) dir = 'left';
+						tooltipLayer = leafletModule.tooltip({ sticky: true, direction: dir });
 						tooltipLayer.setContent(content);
 						tooltipLayer.setLatLng(e.latlng);
-						if (map) map.openTooltip(tooltipLayer);
+						map.openTooltip(tooltipLayer);
 					}
 				});
 

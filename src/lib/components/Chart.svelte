@@ -260,7 +260,7 @@
 		);
 
 		const yMin = 0;
-		const yMax = Math.min(100, (d3.max(allValues) || 100) + 5);
+		const yMax = 100;
 
 		const yScale = d3
 			.scaleLinear()
