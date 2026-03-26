@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getAppState, updateMapView, setSelectedLocation } from '$lib/stores/appState.svelte';
+	import { getAppState, updateMapView, setSelectedLocation, COUNTRY_CONFIG } from '$lib/stores/appState.svelte';
 	import {
 		getGridData,
 		getLocationData,
@@ -157,13 +157,14 @@
 
 	async function loadGeoJSONData(L: any) {
 		try {
-			const response = await fetch(`/data/grids/kenia.geojson`);
+			const config = COUNTRY_CONFIG[appState.country];
+			const response = await fetch(config.gridFile);
 			geojsonData = await response.json();
 
-			// Pre-compute snap cache (once, never changes)
+			// Pre-compute snap cache (once per country)
 			buildSnapCache();
 
-			// Create the GeoJSON layer ONCE
+			// Create the GeoJSON layer
 			createGeoJSONLayer(L);
 
 			isLoading = false;
@@ -342,6 +343,22 @@
 
 		if (geoJsonLayer && appState.dataLoaded) {
 			updateStyles();
+		}
+	});
+
+	// Reload grid when country changes
+	let loadedCountry = '';
+	$effect(() => {
+		const country = appState.country;
+		if (leafletModule && isInitialized && country !== loadedCountry) {
+			loadedCountry = country;
+			// Remove old layer
+			if (geoJsonLayer && map) {
+				map.removeLayer(geoJsonLayer);
+				geoJsonLayer = null;
+			}
+			isLoading = true;
+			loadGeoJSONData(leafletModule);
 		}
 	});
 

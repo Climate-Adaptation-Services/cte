@@ -3,7 +3,7 @@
 	import UserInput from '$lib/components/UserInput.svelte';
 	import Map from '$lib/components/Map.svelte';
 	import Chart from '$lib/components/Chart.svelte';
-	import { getAppState, updateTemperature, getStateFromURL, getLocationFromURL, updateURLFromState, setDataLoaded, setSelectedLocation } from '$lib/stores/appState.svelte';
+	import { getAppState, updateTemperature, getStateFromURL, getLocationFromURL, getCountryFromURL, updateURLFromState, setDataLoaded, setSelectedLocation, setCountry, COUNTRY_CONFIG } from '$lib/stores/appState.svelte';
 	import { loadClimateData } from '$lib/services/climateData';
 
 	const appState = getAppState();
@@ -12,6 +12,10 @@
 
 	// Load state from URL and climate data on mount
 	onMount(async () => {
+		// Read country from URL first
+		const country = getCountryFromURL();
+		setCountry(country);
+
 		const urlState = getStateFromURL();
 		if (urlState) {
 			updateTemperature(urlState);
@@ -24,7 +28,7 @@
 
 		// Load climate CSV data
 		try {
-			await loadClimateData();
+			await loadClimateData(COUNTRY_CONFIG[appState.country].csvFile);
 			setDataLoaded(true);
 		} catch (error) {
 			console.error('Failed to load climate data:', error);

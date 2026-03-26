@@ -12,7 +12,10 @@
       "Bash(python -c \":*)",
       "Bash(npx svelte-check)",
       "Bash(npm run dev)",
-      "Bash(timeout 10 npx vite dev --port 5173)"
+      "Bash(timeout 10 npx vite dev --port 5173)",
+      "Bash(find /c/Users/sophi/Documents/cte -name *.py -type f)",
+      "Bash(find /c/Users/sophi/Documents/cte/src -name *.css -o -name *.scss)",
+      "Bash(python3:*)"
     ]
   }
 }

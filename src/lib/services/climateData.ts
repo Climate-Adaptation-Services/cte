@@ -41,6 +41,7 @@ type FlatMap = Map<string, MonthlyData>;
 let dataIndex: DataIndex | null = null;
 let flatMap: FlatMap | null = null;
 let loadingPromise: Promise<void> | null = null;
+let loadedCsvUrl: string | null = null;
 
 /**
  * Snap a coordinate to the nearest 0.5° grid center (X.25 or X.75)
@@ -52,11 +53,17 @@ export function snapToGrid(value: number): number {
 /**
  * Load and parse the climate CSV data.
  */
-export async function loadClimateData(): Promise<void> {
-	if (dataIndex) return;
-	if (loadingPromise) return loadingPromise;
+export async function loadClimateData(csvUrl: string): Promise<void> {
+	if (dataIndex && loadedCsvUrl === csvUrl) return;
+	if (loadingPromise && loadedCsvUrl === csvUrl) return loadingPromise;
 
-	loadingPromise = fetch('/data/clim_indicators_thresholdTool_medianEnsemble_KEN.csv')
+	// Reset if switching country
+	dataIndex = null;
+	flatMap = null;
+	loadingPromise = null;
+	loadedCsvUrl = csvUrl;
+
+	loadingPromise = fetch(csvUrl)
 		.then((res) => res.text())
 		.then((text) => {
 			const rows = d3.csvParse(text);

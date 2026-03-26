@@ -6,6 +6,32 @@
 import type { Scenario, FuturePeriod } from '$lib/services/climateData';
 
 type Tab = "temperature";
+export type Country = "kenya" | "zimbabwe";
+
+interface CountryConfig {
+  label: string;
+  csvFile: string;
+  gridFile: string;
+  center: [number, number];
+  zoom: number;
+}
+
+export const COUNTRY_CONFIG: Record<Country, CountryConfig> = {
+  kenya: {
+    label: "Kenya",
+    csvFile: "/data/clim_indicators_thresholdTool_medianEnsemble_KEN.csv",
+    gridFile: "/data/grids/kenia_clipped.geojson",
+    center: [0.242001, 37.717031],
+    zoom: 5.5,
+  },
+  zimbabwe: {
+    label: "Zimbabwe",
+    csvFile: "/data/clim_indicators_thresholdTool_medianEnsemble_ZWE.csv",
+    gridFile: "/data/grids/zimbabwe_clipped.geojson",
+    center: [-19.25, 29.25],
+    zoom: 6,
+  },
+};
 
 interface TemperatureState {
   threshold: number;
@@ -26,6 +52,7 @@ interface Location {
 
 interface AppState {
   activeTab: Tab;
+  country: Country;
   temperature: TemperatureState;
   mapView: MapView;
   selectedLocation: Location | null;
@@ -35,6 +62,7 @@ interface AppState {
 // Create reactive state - export directly for better reactivity
 export const appState = $state<AppState>({
   activeTab: "temperature",
+  country: "kenya",
   temperature: {
     threshold: 35,
     years: "2036-2065",
@@ -48,9 +76,6 @@ export const appState = $state<AppState>({
   selectedLocation: null,
   dataLoaded: false,
 });
-
-// Determine which grid to use - always use kenia.geojson for temperature
-export const currentGrid = "kenia";
 
 // Legacy function for backwards compatibility
 export function getAppState() {
@@ -74,6 +99,13 @@ export function setDataLoaded(loaded: boolean) {
   appState.dataLoaded = loaded;
 }
 
+export function setCountry(country: Country) {
+  appState.country = country;
+  const config = COUNTRY_CONFIG[country];
+  appState.mapView = { center: config.center, zoom: config.zoom };
+  appState.selectedLocation = null;
+}
+
 // Default values for reset
 const defaultTemperature: TemperatureState = {
   threshold: 35,
@@ -87,6 +119,14 @@ export function resetToDefaults() {
 }
 
 // URL parameter helpers
+export function getCountryFromURL(): Country {
+  if (typeof window === 'undefined') return 'kenya';
+  const params = new URLSearchParams(window.location.search);
+  const country = params.get('country');
+  if (country && country in COUNTRY_CONFIG) return country as Country;
+  return 'kenya';
+}
+
 export function getStateFromURL(): Partial<TemperatureState> | null {
   if (typeof window === 'undefined') return null;
 
@@ -142,6 +182,7 @@ export function updateURLFromState() {
 
   const params = new URLSearchParams();
 
+  params.set('country', appState.country);
   params.set('t1', appState.temperature.threshold.toString());
   params.set('years', appState.temperature.years);
   params.set('scenario', appState.temperature.scenario);
