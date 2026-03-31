@@ -14,15 +14,13 @@
 	}
 
 	const presets: Preset[] = [
-		// Crops - key crops Kenya
-		{ label: '🍵 Tea', threshold: 30, months: [1, 12], description: 'Leaf scorch, quality loss', category: 'Yield loss' },
-		{ label: '☕ Coffee', threshold: 30, months: [1, 12], description: 'Flower abortion, quality decline', category: 'Yield loss' },
-		{ label: '🌽 Maize', threshold: 35, months: [1, 12], description: 'Pollination failure', category: 'Yield loss' },
-		{ label: '🫘 Beans', threshold: 30, months: [1, 12], description: 'Flower and pod formation disrupted', category: 'Yield loss' },
-		{ label: '🌾 Wheat', threshold: 32, months: [1, 12], description: 'Grain filling stops', category: 'Yield loss' },
-		{ label: '🌱 Sorghum', threshold: 35, months: [1, 12], description: 'Pollen stress, yield loss', category: 'Yield loss' },
+		{ label: '🌽 Maize', threshold: 32, months: [1, 12], description: 'Pollination failure', category: 'Yield loss' },
+		{ label: '🍅 Tomatoes', threshold: 32, months: [1, 12], description: 'Fruit set failure', category: 'Yield loss' },
 		{ label: '🍚 Rice', threshold: 35, months: [1, 12], description: 'Pollen sterility', category: 'Yield loss' },
-		{ label: '🎋 Sugarcane', threshold: 38, months: [1, 12], description: 'Growth retardation', category: 'Yield loss' },
+		{ label: '🥬 Kale', threshold: 30, months: [1, 12], description: 'Heat stress, bolting', category: 'Yield loss' },
+		{ label: '🫘 Beans', threshold: 30, months: [1, 12], description: 'Flower and pod formation disrupted', category: 'Yield loss' },
+		{ label: '☕ Coffee', threshold: 30, months: [1, 12], description: 'Flower abortion, quality decline', category: 'Yield loss' },
+		{ label: '🍵 Tea', threshold: 30, months: [1, 12], description: 'Leaf scorch, quality loss', category: 'Yield loss' },
 		// Livestock - danger zone
 		{ label: '🐔 Poultry', threshold: 30, months: [1, 12], description: 'Danger zone for poultry', category: 'Livestock danger' },
 		{ label: '🐷 Pigs', threshold: 30, months: [1, 12], description: 'Danger zone for pigs', category: 'Livestock danger' },
@@ -1063,7 +1061,7 @@
 		font-weight: 600;
 		color: #0A565E;
 		white-space: nowrap;
-		min-width: 110px;
+		min-width: 85px;
 	}
 
 	.preset-chips {
