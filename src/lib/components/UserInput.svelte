@@ -16,10 +16,9 @@
 	const presets: Preset[] = [
 		{ label: '🌽 Maize', threshold: 32, months: [1, 12], description: 'Pollination failure', category: 'Yield loss' },
 		{ label: '🍅 Tomatoes', threshold: 32, months: [1, 12], description: 'Fruit set failure', category: 'Yield loss' },
-		{ label: '🍚 Rice', threshold: 35, months: [1, 12], description: 'Pollen sterility', category: 'Yield loss' },
 		{ label: '🥬 Kale', threshold: 30, months: [1, 12], description: 'Heat stress, bolting', category: 'Yield loss' },
 		{ label: '🫘 Beans', threshold: 30, months: [1, 12], description: 'Flower and pod formation disrupted', category: 'Yield loss' },
-		{ label: '☕ Coffee', threshold: 30, months: [1, 12], description: 'Flower abortion, quality decline', category: 'Yield loss' },
+		{ label: '☕ Coffee', threshold: 28, months: [1, 12], description: 'Flower abortion, quality decline', category: 'Yield loss' },
 		{ label: '🍵 Tea', threshold: 30, months: [1, 12], description: 'Leaf scorch, quality loss', category: 'Yield loss' },
 		// Livestock - danger zone
 		{ label: '🐔 Poultry', threshold: 30, months: [1, 12], description: 'Danger zone for poultry', category: 'Livestock danger' },
