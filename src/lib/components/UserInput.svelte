@@ -4,6 +4,54 @@
 
 	const appState = getAppState();
 
+	// Preset definitions
+	interface Preset {
+		label: string;
+		threshold: number;
+		months: [number, number];
+		description: string;
+		category: string;
+	}
+
+	const presets: Preset[] = [
+		// Livestock - danger zone
+		{ label: '🐔 Poultry', threshold: 30, months: [1, 12], description: 'Danger zone for poultry', category: 'Livestock danger' },
+		{ label: '🐷 Pigs', threshold: 30, months: [1, 12], description: 'Danger zone for pigs', category: 'Livestock danger' },
+		{ label: '🐄 Cattle', threshold: 35, months: [1, 12], description: 'Danger zone for cattle', category: 'Livestock danger' },
+		{ label: '🐑 Sheep', threshold: 35, months: [1, 12], description: 'Danger zone for sheep', category: 'Livestock danger' },
+		{ label: '🐐 Goats', threshold: 38, months: [1, 12], description: 'Danger zone for goats', category: 'Livestock danger' },
+	];
+
+	// Track active preset
+	let activePreset = $state<string | null>(null);
+
+	function applyPreset(preset: Preset) {
+		if (activePreset === preset.label) {
+			activePreset = null;
+			return;
+		}
+		activePreset = preset.label;
+		updateTemperature({
+			threshold: preset.threshold,
+			months: preset.months
+		});
+	}
+
+	// Clear active preset when user manually changes threshold or months
+	$effect(() => {
+		const _ = [appState.temperature.threshold, appState.temperature.months[0], appState.temperature.months[1]];
+		if (activePreset) {
+			const preset = presets.find(p => p.label === activePreset);
+			if (preset && (
+				appState.temperature.threshold !== preset.threshold ||
+				appState.temperature.months[0] !== preset.months[0] ||
+				appState.temperature.months[1] !== preset.months[1]
+			)) {
+				activePreset = null;
+			}
+		}
+	});
+
 	// Tooltip state
 	let activeTooltip = $state<string | null>(null);
 
@@ -184,6 +232,22 @@
 						step="1"
 						onblur={clampThreshold}
 					/>
+				</div>
+			</div>
+
+			<div class="presets-section">
+				<span class="presets-label">Livestock danger zone</span>
+				<div class="preset-chips">
+					{#each presets as preset}
+						<button
+							class="preset-chip"
+							class:active={activePreset === preset.label}
+							onclick={() => applyPreset(preset)}
+							title="{preset.description}"
+						>
+							{preset.label}
+						</button>
+					{/each}
 				</div>
 			</div>
 		</div>
@@ -939,6 +1003,58 @@
 			opacity: 1;
 			transform: translateY(0);
 		}
+	}
+
+	/* Presets */
+	.presets-section {
+		margin-top: 0.875rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid #e9ecef;
+	}
+
+	.presets-label {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		color: #6c757d;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		display: block;
+		margin-bottom: 0.5rem;
+	}
+
+	.preset-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
+	}
+
+	.preset-chip {
+		padding: 0.25rem 0.625rem;
+		border: 1px solid #D6DEE8;
+		border-radius: 100px;
+		background: white;
+		color: #2c3e50;
+		font-size: 0.6875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		white-space: nowrap;
+		font-family: inherit;
+		line-height: 1.4;
+	}
+
+	.preset-chip:hover {
+		border-color: #0A565E;
+		background: #f0faf5;
+		color: #0A565E;
+	}
+
+	.preset-chip.active {
+		background: #0A565E;
+		border-color: #0A565E;
+		color: white;
+		font-weight: 600;
+		box-shadow: 0 1px 4px rgba(10, 86, 94, 0.3);
 	}
 
 	/* Mobile Responsive Styles */

@@ -112,7 +112,11 @@
 			<div class="about-grid">
 				<div class="about-item">
 					<h4>Data source</h4>
-					<p>Climate projections are based on <strong>10 bias-adjusted and statistically downscaled CMIP6 global climate models</strong> provided by phase 3b of the Intersectoral Impact Model Intercomparison Project (see <strong><a href="https://www.isimip.org/" target="_blank" rel="noopener noreferrer">ISIMIP3b</a></strong>). The ensemble includes GFDL-ESM4, IPSL-CM6A-LR, MPI-ESM1-2-HR, MRI-ESM2-0, UKESM1-0-LL, CanESM5, CNRM-CM6-1, CNRM-ESM2-1, EC-Earth3, and MIROC6. Results are based on the ensemble median to provide a robust central estimate. The data were processed as part of the <a href="https://safe4allafrica.eu/" target="_blank" rel="noopener noreferrer">SAFE4ALL Africa</a> project.</p>
+					{#if appState.country === 'kenya'}
+						<p>Climate projections are based on <strong>10 bias-adjusted and statistically downscaled CMIP6 global climate models</strong> provided by phase 3b of the Intersectoral Impact Model Intercomparison Project (see <strong><a href="https://www.isimip.org/" target="_blank" rel="noopener noreferrer">ISIMIP3b</a></strong>). The ensemble includes GFDL-ESM4, IPSL-CM6A-LR, MPI-ESM1-2-HR, MRI-ESM2-0, UKESM1-0-LL, CanESM5, CNRM-CM6-1, CNRM-ESM2-1, EC-Earth3, and MIROC6. Results are based on the ensemble median to provide a robust central estimate. The data were processed as part of the <a href="https://safe4allafrica.eu/" target="_blank" rel="noopener noreferrer">SAFE4ALL Africa</a> project.</p>
+					{:else}
+						<p>Climate projections are based on <strong>5 bias-adjusted and statistically downscaled CMIP6 global climate models</strong> provided by phase 3b of the Intersectoral Impact Model Intercomparison Project (see <strong><a href="https://www.isimip.org/" target="_blank" rel="noopener noreferrer">ISIMIP3b</a></strong>). The ensemble includes GFDL-ESM4, IPSL-CM6A-LR, MPI-ESM1-2-HR, MRI-ESM2-0, and UKESM1-0-LL. Results are based on the ensemble median to provide a robust central estimate. The data were processed as part of the <a href="https://safe4allafrica.eu/" target="_blank" rel="noopener noreferrer">SAFE4ALL Africa</a> project.</p>
+					{/if}
 				</div>
 				<div class="about-item">
 					<h4>Methodology</h4>
