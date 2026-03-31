@@ -14,6 +14,15 @@
 	}
 
 	const presets: Preset[] = [
+		// Crops - key crops Kenya
+		{ label: '🍵 Tea', threshold: 30, months: [1, 12], description: 'Leaf scorch, quality loss', category: 'Crop damage' },
+		{ label: '☕ Coffee', threshold: 30, months: [1, 12], description: 'Flower abortion, quality decline', category: 'Crop damage' },
+		{ label: '🌽 Maize', threshold: 35, months: [1, 12], description: 'Pollination failure', category: 'Crop damage' },
+		{ label: '🫘 Beans', threshold: 30, months: [1, 12], description: 'Flower and pod formation disrupted', category: 'Crop damage' },
+		{ label: '🌾 Wheat', threshold: 32, months: [1, 12], description: 'Grain filling stops', category: 'Crop damage' },
+		{ label: '🌱 Sorghum', threshold: 35, months: [1, 12], description: 'Pollen stress, yield loss', category: 'Crop damage' },
+		{ label: '🍚 Rice', threshold: 35, months: [1, 12], description: 'Pollen sterility', category: 'Crop damage' },
+		{ label: '🎋 Sugarcane', threshold: 38, months: [1, 12], description: 'Growth retardation', category: 'Crop damage' },
 		// Livestock - danger zone
 		{ label: '🐔 Poultry', threshold: 30, months: [1, 12], description: 'Danger zone for poultry', category: 'Livestock danger' },
 		{ label: '🐷 Pigs', threshold: 30, months: [1, 12], description: 'Danger zone for pigs', category: 'Livestock danger' },
@@ -21,6 +30,17 @@
 		{ label: '🐑 Sheep', threshold: 35, months: [1, 12], description: 'Danger zone for sheep', category: 'Livestock danger' },
 		{ label: '🐐 Goats', threshold: 38, months: [1, 12], description: 'Danger zone for goats', category: 'Livestock danger' },
 	];
+
+	// Group presets by category (preserving order)
+	const presetCategories = $derived(() => {
+		const cats: [string, Preset[]][] = [];
+		for (const p of presets) {
+			const existing = cats.find(([c]) => c === p.category);
+			if (existing) existing[1].push(p);
+			else cats.push([p.category, [p]]);
+		}
+		return cats;
+	});
 
 	// Track active preset
 	let activePreset = $state<string | null>(null);
@@ -236,19 +256,24 @@
 			</div>
 
 			<div class="presets-section">
-				<span class="presets-label">Livestock danger zone</span>
-				<div class="preset-chips">
-					{#each presets as preset}
-						<button
-							class="preset-chip"
-							class:active={activePreset === preset.label}
-							onclick={() => applyPreset(preset)}
-							title="{preset.description}"
-						>
-							{preset.label}
-						</button>
-					{/each}
-				</div>
+				<span class="presets-label">Presets</span>
+				{#each presetCategories() as [category, categoryPresets]}
+					<div class="preset-row">
+						<span class="preset-category-label">{category}</span>
+						<div class="preset-chips">
+							{#each categoryPresets as preset}
+								<button
+									class="preset-chip"
+									class:active={activePreset === preset.label}
+									onclick={() => applyPreset(preset)}
+									title="{preset.description}"
+								>
+									{preset.label}
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/each}
 			</div>
 		</div>
 
@@ -1020,6 +1045,25 @@
 		letter-spacing: 0.05em;
 		display: block;
 		margin-bottom: 0.5rem;
+	}
+
+	.preset-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.375rem;
+	}
+
+	.preset-row:last-child {
+		margin-bottom: 0;
+	}
+
+	.preset-category-label {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		color: #0A565E;
+		white-space: nowrap;
+		min-width: 110px;
 	}
 
 	.preset-chips {
