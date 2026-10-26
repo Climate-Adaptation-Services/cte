@@ -291,10 +291,12 @@
 		// O(1) lookup for the grid data
 		const gridData = getGridData(scenario, mapPeriod, threshold);
 
-		// Compute min/max from the ~323 grid cells (fast)
+		// Compute min/max from the drawn cells only (the CSV also has cells outside the country)
 		let minVal = Infinity;
 		let maxVal = -Infinity;
-		for (const data of gridData.values()) {
+		for (const key of snapCache.values()) {
+			const data = gridData.get(key);
+			if (!data) continue;
 			const value = sumMonthRange(data, monthStart, monthEnd);
 			if (value < minVal) minVal = value;
 			if (value > maxVal) maxVal = value;

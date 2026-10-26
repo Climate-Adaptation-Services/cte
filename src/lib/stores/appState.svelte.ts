@@ -6,7 +6,7 @@
 import type { Scenario, FuturePeriod } from '$lib/services/climateData';
 
 type Tab = "temperature";
-export type Country = "kenya" | "zimbabwe";
+export type Country = "kenya" | "zimbabwe" | "ghana";
 
 interface CountryConfig {
   label: string;
@@ -29,6 +29,13 @@ export const COUNTRY_CONFIG: Record<Country, CountryConfig> = {
     csvFile: "/data/clim_indicators_thresholdTool_medianEnsemble_ZWE.csv",
     gridFile: "/data/grids/zimbabwe_clipped.geojson",
     center: [-19.25, 29.25],
+    zoom: 6,
+  },
+  ghana: {
+    label: "Ghana",
+    csvFile: "/data/clim_indicators_thresholdTool_medianEnsemble_GHA.csv",
+    gridFile: "/data/grids/ghana_clipped.geojson",
+    center: [7.95, -1.03],
     zoom: 6,
   },
 };

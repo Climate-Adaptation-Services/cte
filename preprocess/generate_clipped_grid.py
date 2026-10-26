@@ -4,16 +4,26 @@ Generate a clipped Kenya grid GeoJSON from the climate CSV and Kenya boundary.
 Each grid cell is a 0.5° square centered on the lat/lon from the CSV,
 clipped to the Kenya boundary polygon. The `lat_lon` property matches
 the CSV format exactly (e.g. "-4.25_33.75").
+
+Usage (defaults to Kenya):
+    python generate_clipped_grid.py [CSV_PATH BOUNDARY_PATH OUTPUT_PATH]
+
+Ghana boundary: geoBoundaries gbOpen GHA ADM0
+(https://www.geoboundaries.org/api/current/gbOpen/GHA/ADM0/)
 """
 
 import csv
 import json
+import sys
 from shapely.geometry import shape, box, mapping
 from shapely.ops import unary_union
 
 CSV_PATH = "../static/data/clim_indicators_thresholdTool_medianEnsemble_KEN.csv"
 BOUNDARY_PATH = "../static/data/grids/kenya.json"
 OUTPUT_PATH = "../static/data/grids/kenia_clipped.geojson"
+
+if len(sys.argv) == 4:
+    CSV_PATH, BOUNDARY_PATH, OUTPUT_PATH = sys.argv[1:]
 
 CELL_SIZE = 0.5  # degrees
 
