@@ -96,6 +96,7 @@
 
 			map = L.map(mapContainer, {
 				zoomControl: true,
+				zoomSnap: 0.25,
 				attributionControl: true,
 				scrollWheelZoom: false,
 				dragging: !isMobile

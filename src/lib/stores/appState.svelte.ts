@@ -22,7 +22,7 @@ export const COUNTRY_CONFIG: Record<Country, CountryConfig> = {
     csvFile: "/data/clim_indicators_thresholdTool_medianEnsemble_KEN.csv",
     gridFile: "/data/grids/kenia_clipped.geojson",
     center: [0.242001, 37.717031],
-    zoom: 5.5,
+    zoom: 6,
   },
   zimbabwe: {
     label: "Zimbabwe",
@@ -36,7 +36,7 @@ export const COUNTRY_CONFIG: Record<Country, CountryConfig> = {
     csvFile: "/data/clim_indicators_thresholdTool_medianEnsemble_GHA.csv",
     gridFile: "/data/grids/ghana_clipped.geojson",
     center: [7.95, -1.03],
-    zoom: 6,
+    zoom: 6.5,
   },
 };
 
@@ -78,7 +78,7 @@ export const appState = $state<AppState>({
   },
   mapView: {
     center: [0.242001, 37.717031],
-    zoom: 5.5,
+    zoom: 6,
   },
   selectedLocation: null,
   dataLoaded: false,
