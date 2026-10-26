@@ -117,7 +117,7 @@ export function setCountry(country: Country) {
 const defaultTemperature: TemperatureState = {
   threshold: 35,
   years: "2036-2065",
-  scenario: "ssp370",
+  scenario: "ssp585",
   months: [1, 12],
 };
 
@@ -152,7 +152,7 @@ export function getStateFromURL(): Partial<TemperatureState> | null {
   }
 
   const scenario = params.get('scenario');
-  if (scenario === 'ssp126' || scenario === 'ssp370' || scenario === 'ssp585') {
+  if (scenario === 'ssp126' || scenario === 'ssp585') {
     state.scenario = scenario;
   }
 

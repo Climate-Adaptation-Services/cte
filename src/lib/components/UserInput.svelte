@@ -76,7 +76,7 @@
 	const tooltips = {
 		temperature: 'Set the maximum temperature threshold. The map will show the number of days per year where maximum daily temperatures exceed this value.',
 		period: 'Climate projections are grouped into 30-year periods. Earlier periods have less uncertainty, later periods show more pronounced climate change effects.',
-		scenario: 'Shared Socioeconomic Pathways (SSPs) represent different emission scenarios. SSP1-2.6 is low emissions, SSP3-7.0 is medium, and SSP5-8.5 is high emissions.',
+		scenario: 'Shared Socioeconomic Pathways (SSPs) represent different emission scenarios. SSP1-2.6 is low emissions and SSP5-8.5 is high emissions.',
 		months: 'Select a range of months to focus your analysis on specific seasons or time periods within the year.'
 	};
 
