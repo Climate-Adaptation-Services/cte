@@ -25,7 +25,8 @@
 		{ label: '🐷 Pigs', threshold: 30, months: [1, 12], description: 'Danger zone for pigs', category: 'Livestock danger' },
 		{ label: '🐄 Cattle', threshold: 35, months: [1, 12], description: 'Danger zone for cattle', category: 'Livestock danger' },
 		{ label: '🐑 Sheep', threshold: 35, months: [1, 12], description: 'Danger zone for sheep', category: 'Livestock danger' },
-		{ label: '🐐 Goats', threshold: 38, months: [1, 12], description: 'Danger zone for goats', category: 'Livestock danger' },
+		
+		{ label: '🥵 Extreme Heat', threshold: 38, months: [1, 12], description: 'Danger zone for human health', category: 'Health danger' },
 	];
 
 	// Group presets by category (preserving order)
