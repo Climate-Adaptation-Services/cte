@@ -1,5 +1,5 @@
 /**
- * Central application state management for Climate Atlas
+ * Central application state management
  * Uses Svelte 5 runes for reactivity
  */
 

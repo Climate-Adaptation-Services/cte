@@ -1,6 +1,6 @@
 /**
  * Climate data service - loads and provides access to climate indicator data
- * Data source: clim_indicators_thresholdTool_medianEnsemble_KEN.csv
+ * Data source: static/data/clim_indicators_thresholdTool_medianEnsemble_<ISO>.csv (one per country)
  *
  * Uses a nested index for O(1) grid lookups instead of linear scans.
  */

@@ -1,8 +1,8 @@
 """
-Generate a clipped Kenya grid GeoJSON from the climate CSV and Kenya boundary.
+Generate a clipped country grid GeoJSON from the climate CSV and the country boundary.
 
 Each grid cell is a 0.5° square centered on the lat/lon from the CSV,
-clipped to the Kenya boundary polygon. The `lat_lon` property matches
+clipped to the country boundary polygon. The `lat_lon` property matches
 the CSV format exactly (e.g. "-4.25_33.75").
 
 Usage (defaults to Kenya):

@@ -471,13 +471,6 @@
 		margin-bottom: 1.25rem;
 	}
 
-	.subtitle {
-		font-size: 0.8125rem;
-		color: #6c757d;
-		font-weight: 400;
-		margin: 0;
-	}
-
 	/* Sections Row - for side by side layout */
 	.sections-row {
 		display: flex;
@@ -1135,10 +1128,6 @@
 
 		.main-question {
 			font-size: 1.125rem;
-		}
-
-		.subtitle {
-			font-size: 0.75rem;
 		}
 
 		.sections-row {
